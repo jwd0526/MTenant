@@ -1,0 +1,55 @@
+services:
+  db:
+    container_name: crm-platform
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: 
+      POSTGRES_PASSWORD: 
+      POSTGRES_DB: crm-platform
+      POSTGRES_INITDB_ARGS: --lc-numeric=en_US.UTF-8
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - crm-data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"  # Bind to IPv4 only
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d crm-platform"]
+      interval: 30s
+      timeout: 60s
+      retries: 5
+      start_period: 80s
+    networks:
+      - crm-platform-network
+
+  nats-server:
+    container_name: nats-server
+    image: nats:latest
+    restart: unless-stopped
+    ports: 
+      - "4222:4222"
+      - "8222:8222"
+    networks:
+      - crm-platform-network
+
+  redis-cache:
+    container_name: redis-cache  # Changed from 'redis' to match service name
+    image: redis:7.0-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: 
+      - "redis-server"
+      - "--maxmemory-policy"
+      - "allkeys-lru"
+      - "--maxmemory"
+      - "256mb"
+    networks:
+      - crm-platform-network
+
+networks:
+  crm-platform-network:
+    driver: bridge
+
+volumes:
+  crm-data:

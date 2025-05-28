@@ -1,0 +1,9 @@
+go 1.24.3
+
+use (
+	./services/auth-service
+	./services/communication-service
+	./services/contact-service
+	./services/deal-service
+	./services/tenant-service
+)
