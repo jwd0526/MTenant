@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# USAGE: ./test.sh <postgres-username>
+
 # CRM Platform Health Check Script
 set -e  # Exit on any error
 
@@ -21,21 +23,21 @@ echo
 echo "=== Test PostgreSQL ==="
 
 echo "Testing PostgreSQL connection..."
-docker exec crm-platform psql -U usercred -d crm-platform -c "SELECT version();"
+docker exec crm-platform psql -U $1 -d crm-platform -c "SELECT version();"
 
 echo
 echo "Listing databases:"
-docker exec crm-platform psql -U usercred -d crm-platform -c "\l"
+docker exec crm-platform psql -U $1 -d crm-platform -c "\l"
 
 echo
 echo "Testing write permissions..."
-docker exec crm-platform psql -U usercred -d crm-platform -c "CREATE TABLE IF NOT EXISTS test_table (id SERIAL PRIMARY KEY, name VARCHAR(50));"
-docker exec crm-platform psql -U usercred -d crm-platform -c "INSERT INTO test_table (name) VALUES ('test');"
+docker exec crm-platform psql -U $1 -d crm-platform -c "CREATE TABLE IF NOT EXISTS test_table (id SERIAL PRIMARY KEY, name VARCHAR(50));"
+docker exec crm-platform psql -U $1 -d crm-platform -c "INSERT INTO test_table (name) VALUES ('test');"
 
 echo "Querying test data:"
-docker exec crm-platform psql -U usercred -d crm-platform -c "SELECT * FROM test_table;"
+docker exec crm-platform psql -U $1 -d crm-platform -c "SELECT * FROM test_table;"
 
-docker exec crm-platform psql -U usercred -d crm-platform -c "DROP TABLE IF EXISTS test_table;"
+docker exec crm-platform psql -U $1 -d crm-platform -c "DROP TABLE IF EXISTS test_table;"
 echo "PostgreSQL test completed successfully!"
 
 echo
@@ -119,15 +121,15 @@ echo "Testing external access to services..."
 
 # Test PostgreSQL from host using port 5433
 echo "Testing PostgreSQL from host (port 5433)..."
-export PGPASSWORD=usercred
+export PGPASSWORD=$1
 
-if psql -h localhost -p 5433 -U usercred -d crm-platform -c "SELECT 1;" > /dev/null 2>&1; then
+if psql -h localhost -p 5433 -U $1 -d crm-platform -c "SELECT 1;" > /dev/null 2>&1; then
     echo "✓ PostgreSQL is accessible from host on port 5433"
-elif psql -h 127.0.0.1 -p 5433 -U usercred -d crm-platform -c "SELECT 1;" > /dev/null 2>&1; then
+elif psql -h 127.0.0.1 -p 5433 -U $1 -d crm-platform -c "SELECT 1;" > /dev/null 2>&1; then
     echo "✓ PostgreSQL is accessible from host on 127.0.0.1:5433"
 else
     echo "✗ PostgreSQL is not accessible from host"
-    echo "  Try: export PGPASSWORD=usercred && psql -h localhost -p 5433 -U usercred -d crm-platform"
+    echo "  Try: export PGPASSWORD=$1 && psql -h localhost -p 5433 -U $1 -d crm-platform"
 fi
 
 # Test Redis from host
@@ -184,9 +186,9 @@ echo
 echo "=== Health Check Complete ==="
 echo
 echo "Connection Information:"
-echo "- PostgreSQL: localhost:5433 (user: usercred, password: usercred, database: crm-platform)"
+echo "- PostgreSQL: localhost:5433 (user: $1, password: $1, database: crm-platform)"
 echo "- Redis: localhost:6379"
 echo "- NATS: localhost:4222 (monitoring: http://localhost:8222)"
 echo
 echo "To connect to PostgreSQL from your host:"
-echo "export PGPASSWORD=usercred && psql -h localhost -p 5433 -U usercred -d crm-platform"
+echo "export PGPASSWORD=$1 && psql -h localhost -p 5433 -U $1 -d crm-platform"
