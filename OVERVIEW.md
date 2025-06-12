@@ -499,3 +499,39 @@ The architecture supports:
 - Efficient indexing maintains query performance
 
 This architecture provides a solid foundation for a multi-tenant SaaS CRM that can scale from hundreds to hundreds of thousands of users while maintaining security, performance, and compliance requirements.
+
+## Market Prospect
+
+The CRM market is dominated by established players like Salesforce, with most businesses already running some form of customer management system. Core CRM functionality has become commoditized, and high switching costs create customer lock-in.
+
+**Market dynamics:**
+
+Vertical specialization has emerged as the primary differentiation strategy. Generic CRMs struggle to address industry-specific workflows, creating opportunities for targeted solutions.
+
+User experience remains a competitive advantage. Many existing platforms suffer from poor usability and interface design.
+
+AI integration is becoming standard, though implementation quality varies significantly across providers.
+
+The addressable market continues growing through global digitization, particularly among smaller businesses underserved by enterprise solutions.
+
+**Viable target segments:**
+
+**HVAC and home services** require service scheduling, equipment tracking, seasonal customer management, and visual documentation capabilities.
+
+**Construction and contractors** need project-based workflows, bid management, subcontractor coordination, and regulatory compliance tracking.
+
+**Real estate** demands property listing integration, transaction management, client communication workflows, and referral tracking.
+
+**Insurance agencies** require policy lifecycle management, claims integration, carrier connectivity, and compliance reporting.
+
+**Automotive sales** needs inventory integration, service history tracking, and manufacturer reporting systems.
+
+**Healthcare practices** require patient communication, appointment systems, and regulatory compliance (HIPAA).
+
+**Professional services** need time tracking, billing integration, and matter/case management.
+
+**Retail operations** require inventory connectivity, purchase history analysis, and campaign management.
+
+**Fitness and wellness** businesses need membership management, scheduling systems, and progress tracking.
+
+These verticals justify specialized solutions due to distinct workflow requirements, regulatory constraints, and integration needs that generic platforms handle poorly.
