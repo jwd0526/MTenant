@@ -81,7 +81,7 @@ reset-db:
 	docker-compose stop db
 	@echo "Removing database container and volume..."
 	docker-compose rm -f db
-	docker volume rm $$(docker-compose config --volumes | grep crm-data) 2>/dev/null || true
+	docker volume rm $$(docker volume ls -q | grep crm) 2>/dev/null || true
 	@echo "Starting fresh database..."
 	docker-compose up -d db
 	@echo "Waiting for database to be ready..."

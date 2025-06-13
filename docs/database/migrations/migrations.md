@@ -145,15 +145,15 @@ WHERE id BETWEEN 1 AND 10000;
 # Test complete migration cycle
 make reset-db
 
+# Test rollback
+migrate -database "$DATABASE_URL" -path "migrations" down 1
+migrate -database "$DATABASE_URL" -path "migrations" up
+
 # Check tables
 docker exec -it crm-platform psql -U admin -d crm-platform -c "\dt"
 
 # Check tenant data
 docker exec -it crm-platform psql -U admin -d crm-platform -c "SELECT * FROM tenants;"
-
-# Test rollback
-migrate -database "$DATABASE_URL" -path "migrations/global" down 1
-migrate -database "$DATABASE_URL" -path "migrations/global" up
 
 ```
 
