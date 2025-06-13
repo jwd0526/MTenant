@@ -312,6 +312,8 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateU
 
 ### Database Connection Setup
 
+Services now use the shared `pkg/database` package for standardized connection management:
+
 ```go
 package main
 
@@ -319,24 +321,37 @@ import (
     "context"
     "log"
     
-    "github.com/jackc/pgx/v5/pgxpool"
+    "crm-platform/pkg/database"
     "crm-platform/auth-service/internal/db"
 )
 
 func main() {
     ctx := context.Background()
     
-    // Connect to database
-    conn, err := pgxpool.New(ctx, "postgresql://admin:admin@localhost:5433/crm-platform")
+    // Load database configuration from environment
+    dbConfig, err := database.LoadConfigFromEnv()
     if err != nil {
-        log.Fatal("Failed to connect to database:", err)
+        log.Fatal("Failed to load database config:", err)
     }
-    defer conn.Close()
     
-    // Create queries instance
-    queries := db.New(conn)
+    // Create connection pool with retry logic and health monitoring
+    dbPool, err := database.NewPool(ctx, dbConfig)
+    if err != nil {
+        log.Fatal("Failed to create database pool:", err)
+    }
+    defer dbPool.Close()
     
-    // Use generated methods
+    // Verify database health on startup
+    health := dbPool.HealthCheck(ctx)
+    if !health.Healthy {
+        log.Fatal("Database health check failed:", health.Error)
+    }
+    log.Printf("Database connected in %v", health.ResponseTime)
+    
+    // Create SQLC queries instance with shared connection pool
+    queries := db.New(dbPool)
+    
+    // Use generated methods with enhanced connection management
     user, err := queries.CreateUser(ctx, db.CreateUserParams{
         Email:        "user@example.com",
         PasswordHash: "$2a$10$...",
@@ -356,8 +371,9 @@ func main() {
 ### Tenant-Aware Queries
 
 ```go
-// Set tenant schema context
-_, err := conn.Exec(ctx, "SET search_path = tenant_example")
+// Set tenant schema context using shared database pool
+schemaName := "tenant_example"
+_, err := dbPool.Exec(ctx, "SET search_path = $1", schemaName)
 if err != nil {
     return err
 }
@@ -367,6 +383,13 @@ contacts, err := queries.ListContacts(ctx, db.ListContactsParams{
     Limit:  20,
     Offset: 0,
 })
+
+// Helper function for tenant context management
+func setTenantContext(ctx context.Context, dbPool *database.Pool, tenantID string) error {
+    schemaName := fmt.Sprintf("tenant_%s", tenantID)
+    _, err := dbPool.Exec(ctx, "SET search_path = $1", schemaName)
+    return err
+}
 ```
 
 ## Best Practices
@@ -400,7 +423,7 @@ contacts, err := queries.ListContacts(ctx, db.ListContactsParams{
 
 **Leverage SQLC Types:**
 ```go
-// Compile-time safety
+// Compile-time safety with shared database connection
 var user db.User
 user.Email = "test@example.com"  // string - OK
 user.ID = "invalid"              // Compile error!
@@ -408,6 +431,12 @@ user.ID = "invalid"              // Compile error!
 // Null handling
 if user.LastLogin.Valid {
     fmt.Printf("Last login: %v", user.LastLogin.Time)
+}
+
+// Health monitoring integration
+health := dbPool.HealthCheck(ctx)
+if !health.Healthy {
+    log.Printf("Database issue: %s", health.Error)
 }
 ```
 
@@ -468,13 +497,17 @@ SQLC works seamlessly with migration tools:
 
 ## Performance Considerations
 
-- **Connection Pooling:** Use pgxpool for production
-- **Query Caching:** SQLC generates prepared statements
+- **Connection Pooling:** Handled automatically by `pkg/database` with configurable limits
+- **Query Caching:** SQLC generates prepared statements for optimal performance
+- **Health Monitoring:** Built-in database health checks and metrics collection
 - **Batch Operations:** Consider custom batch queries for bulk operations
 - **Index Usage:** Ensure queries use appropriate indexes
+- **Retry Logic:** Automatic connection retry with exponential backoff
+- **Resource Monitoring:** Real-time connection pool statistics and query metrics
 
 ## Related Documentation
 
+- [Shared Packages](./shared-packages.md) - Database package architecture and usage
 - [Database Design](./database.md) - Multi-tenant schema architecture
-- [Service Architecture](./services.md) - How services use SQLC
-- [Development Setup](../development/setup.md) - Local development with SQLC
+- [Service Architecture](./services.md) - How services use SQLC with shared packages
+- [Development Setup](../development/setup.md) - Local development with SQLC and shared packages

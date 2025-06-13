@@ -278,8 +278,59 @@ services/{service-name}/
 │   ├── queries/                # SQL query definitions  
 │   └── schema/                 # Database schema
 ├── Dockerfile                  # Container definition
-├── go.mod                      # Go module dependencies
+├── go.mod                      # Go module dependencies (includes pkg/database)
 └── sqlc.yaml                   # SQLC configuration
+```
+
+### Shared Database Package Integration
+
+All services use the shared `pkg/database` package for standardized database connectivity:
+
+```go
+// Service main.go pattern
+package main
+
+import (
+    "context"
+    "log"
+    
+    "crm-platform/pkg/database"
+    "crm-platform/auth-service/internal/db"
+)
+
+func main() {
+    ctx := context.Background()
+    
+    // Load database configuration from environment
+    dbConfig, err := database.LoadConfigFromEnv()
+    if err != nil {
+        log.Fatal("Failed to load database config:", err)
+    }
+    
+    // Create connection pool with retry logic and monitoring
+    dbPool, err := database.NewPool(ctx, dbConfig)
+    if err != nil {
+        log.Fatal("Failed to create database pool:", err)
+    }
+    defer dbPool.Close()
+    
+    // Verify database health on startup
+    health := dbPool.HealthCheck(ctx)
+    if !health.Healthy {
+        log.Fatal("Database health check failed:", health.Error)
+    }
+    log.Printf("Database connected in %v", health.ResponseTime)
+    
+    // Create SQLC queries instance with shared pool
+    queries := db.New(dbPool)
+    
+    // Initialize service handlers
+    handler := NewHandler(queries, dbPool)
+    
+    // Start HTTP server
+    log.Println("Service starting on :8080")
+    log.Fatal(http.ListenAndServe(":8080", handler))
+}
 ```
 
 ### Authentication Middleware
@@ -317,28 +368,36 @@ func AuthMiddleware(authServiceURL string) gin.HandlerFunc {
 
 ### Tenant Context Injection
 
-Database queries automatically use tenant context:
+Database queries automatically use tenant context with the shared database pool:
 
 ```go
 func (h *ContactHandler) GetContact(c *gin.Context) {
     tenantID := c.GetString("tenant_id")
     contactID := c.Param("id")
     
-    // Set tenant schema for database queries
-    _, err := h.db.Exec(c, "SET search_path = tenant_" + tenantID)
+    // Set tenant schema using shared database pool
+    schemaName := fmt.Sprintf("tenant_%s", tenantID)
+    _, err := h.dbPool.Exec(c.Request.Context(), "SET search_path = $1", schemaName)
     if err != nil {
-        c.JSON(500, gin.H{"error": "Database error"})
+        c.JSON(500, gin.H{"error": "Failed to set tenant context"})
         return
     }
     
-    // Query within tenant schema
-    contact, err := h.queries.GetContactByID(c, contactID)
+    // Query within tenant schema using SQLC queries
+    contact, err := h.queries.GetContactByID(c.Request.Context(), contactID)
     if err != nil {
         c.JSON(404, gin.H{"error": "Contact not found"})
         return
     }
     
     c.JSON(200, contact)
+}
+
+// Helper function for tenant context management
+func (h *Handler) setTenantContext(ctx context.Context, tenantID string) error {
+    schemaName := fmt.Sprintf("tenant_%s", tenantID)
+    _, err := h.dbPool.Exec(ctx, "SET search_path = $1", schemaName)
+    return err
 }
 ```
 
@@ -415,33 +474,62 @@ c.JSON(400, ErrorResponse{
 
 ## Health Checks
 
-Each service implements health check endpoints:
+Each service implements standardized health check endpoints using the shared database package:
 
 ```go
-func HealthCheck(c *gin.Context) {
-    // Check database connectivity
-    if err := db.Ping(); err != nil {
-        c.JSON(503, gin.H{
-            "status": "unhealthy",
-            "error": "Database unavailable",
-        })
-        return
+func (h *Handler) HealthCheck(c *gin.Context) {
+    // Comprehensive database health check with metrics
+    dbHealth := h.dbPool.HealthCheck(c.Request.Context())
+    
+    status := gin.H{
+        "status":        "healthy",
+        "timestamp":     time.Now(),
+        "version":       "1.0.0",
+        "database": gin.H{
+            "healthy":       dbHealth.Healthy,
+            "response_time": dbHealth.ResponseTime.String(),
+            "stats":         dbHealth.Stats,
+        },
     }
     
-    // Check external dependencies
-    if err := checkNATSConnection(); err != nil {
-        c.JSON(503, gin.H{
-            "status": "degraded", 
-            "error": "Messaging unavailable",
-        })
-        return
+    httpStatus := 200
+    
+    // Check database health
+    if !dbHealth.Healthy {
+        status["status"] = "unhealthy"
+        status["database"].(gin.H)["error"] = dbHealth.Error
+        httpStatus = 503
     }
     
-    c.JSON(200, gin.H{
-        "status": "healthy",
-        "timestamp": time.Now(),
-        "version": "1.0.0",
-    })
+    // Check external dependencies (NATS, Redis, etc.)
+    if err := h.checkExternalDependencies(); err != nil {
+        status["status"] = "degraded"
+        status["external_services"] = gin.H{
+            "error": err.Error(),
+        }
+        if httpStatus == 200 {
+            httpStatus = 503
+        }
+    }
+    
+    c.JSON(httpStatus, status)
+}
+
+// Example health check response
+{
+    "status": "healthy",
+    "timestamp": "2024-01-15T10:30:00Z",
+    "version": "1.0.0",
+    "database": {
+        "healthy": true,
+        "response_time": "2.5ms",
+        "stats": {
+            "max_conns": 20,
+            "total_conns": 8,
+            "idle_conns": 3,
+            "acquired_conns": 5
+        }
+    }
 }
 ```
 
@@ -449,15 +537,27 @@ func HealthCheck(c *gin.Context) {
 
 ### Connection Pooling
 
-```go
-// Database connection pool configuration
-config, err := pgxpool.ParseConfig(databaseURL)
-config.MaxConns = 20
-config.MinConns = 5
-config.MaxConnLifetime = time.Hour
-config.MaxConnIdleTime = time.Minute * 30
+Connection pooling is handled by the shared `pkg/database` package:
 
-pool, err := pgxpool.NewWithConfig(ctx, config)
+```go
+// Database configuration automatically loaded from environment
+config, err := database.LoadConfigFromEnv()
+if err != nil {
+    log.Fatal("Database config error:", err)
+}
+
+// Connection pool settings (from pkg/database defaults):
+// MaxConns: 20
+// MinConns: 5  
+// MaxConnLifetime: 60 minutes
+// MaxConnIdleTime: 5 minutes
+// ConnectTimeout: 30 seconds
+// QueryTimeout: 30 seconds
+
+pool, err := database.NewPool(ctx, config)
+if err != nil {
+    log.Fatal("Database pool error:", err)
+}
 ```
 
 ### Caching Strategy

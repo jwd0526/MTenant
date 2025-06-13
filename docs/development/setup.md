@@ -63,13 +63,14 @@ Complete guide for setting up the MTenant CRM development environment.
 
 ## Go Workspace
 
-The project uses Go workspaces to manage multiple modules:
+The project uses Go workspaces to manage multiple modules including shared packages:
 
 ```go
 // go.work
 go 1.24.3
 
 use (
+    ./pkg                       // Shared packages
     ./services/auth-service
     ./services/communication-service
     ./services/contact-service
@@ -78,11 +79,16 @@ use (
 )
 ```
 
-### Service Dependencies
+### Module Dependencies
 
-Each service has standardized dependencies:
-- `github.com/jackc/pgx/v5` - PostgreSQL driver
+**Shared Package (`pkg/`):**
+- `github.com/jackc/pgx/v5` - PostgreSQL driver and connection pooling
+- Database configuration, health monitoring, and metrics collection
+
+**Service Dependencies:**
+- `crm-platform/pkg/database` - Shared database package (via workspace)
 - Generated SQLC code for type-safe queries
+- Service-specific business logic and handlers
 
 ## Directory Structure
 
@@ -94,10 +100,15 @@ MTenant/
 │   ├── contact-service/
 │   ├── deal-service/
 │   └── communication-service/
-├── pkg/                      # Shared utilities
-│   ├── database/
-│   ├── middleware/
-│   └── utils/
+├── pkg/                      # Shared packages
+│   ├── database/            # Database connection and pooling
+│   │   ├── config.go        # Environment configuration
+│   │   ├── pool.go          # Connection pool management
+│   │   ├── health.go        # Health checks and monitoring
+│   │   ├── metrics.go       # Database metrics collection
+│   │   └── ex_test.go       # Integration tests
+│   ├── middleware/          # HTTP middleware (planned)
+│   └── utils/               # Common utilities (planned)
 ├── migrations/               # Database migrations
 ├── k8s/                     # Kubernetes manifests
 ├── docs/                    # Documentation
@@ -131,7 +142,10 @@ MTenant/
 ### Building Services
 
 ```bash
-# Build all services
+# Build shared packages first (automatically included in make build)
+make build-pkg
+
+# Build all services (includes shared packages)
 make build
 
 # Build specific service
@@ -145,11 +159,18 @@ make build-communication-service
 ### Running Tests
 
 ```bash
-# Run all tests
+# Run all tests (includes shared packages)
 make test
+
+# Run tests for shared packages only
+make test-pkg
 
 # Run tests for specific service
 cd services/auth-service && go test -v ./...
+
+# Run database integration tests (requires DATABASE_URL)
+export DATABASE_URL="postgresql://admin:admin@localhost:5433/crm-platform?sslmode=disable"
+cd pkg && go test -v ./database
 ```
 
 ### Database Operations

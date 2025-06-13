@@ -11,6 +11,7 @@ This directory contains comprehensive documentation for the multi-tenant CRM pla
 
 ### Architecture
 - [Service Architecture](./architecture/services.md) - Microservices design and communication
+- [Shared Packages](./architecture/shared-packages.md) - Common functionality and database management
 - [Database Design](./architecture/database.md) - Multi-tenant data isolation and schemas
 - [SQLC Implementation](./architecture/sqlc.md) - Type-safe database access
 
