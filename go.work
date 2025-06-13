@@ -1,6 +1,7 @@
 go 1.24.3
 
 use (
+	./pkg
 	./services/auth-service
 	./services/communication-service
 	./services/contact-service
