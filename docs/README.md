@@ -17,6 +17,7 @@ This directory contains comprehensive documentation for the multi-tenant CRM pla
 ### Database Schemas
 - [Global Schemas](./database/global/) - Tenant registry and system tables
 - [Tenant Templates](./database/tenant-template/) - Schema templates for tenant isolation
+- [Database Migrations](./database/migrations.md) - Migration strategy and golang-migrate guide
 - [Query Documentation](./database/queries/) - SQL query documentation by service
 
 ### Services
@@ -49,5 +50,5 @@ This directory contains comprehensive documentation for the multi-tenant CRM pla
 
 🔄 **Next Steps:**
 - Install golang-migrate tool (Ticket 1.2.11)
-- Create initial migrations
+- Create initial database migrations  
 - Implement service handlers and business logic
