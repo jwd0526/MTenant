@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// DB metrics
+// Metrics holds database performance and usage metrics
 type Metrics struct {
 	// Connection metrics
 	TotalConnections    int64
@@ -23,57 +23,57 @@ type Metrics struct {
 	LastHealthCheck     int64 // unix timestamp
 }
 
-// Create Metrics{} instance
+// NewMetrics creates a new Metrics instance
 func NewMetrics() *Metrics {
 	return &Metrics{}
 }
 
-// Increments the total connections counter
+// IncrementConnections increments the total connections counter
 func (m *Metrics) IncrementConnections() {
 	atomic.AddInt64(&m.TotalConnections, 1)
 }
 
-// Increments the failed connections counter
+// IncrementFailedConnections increments the failed connections counter
 func (m *Metrics) IncrementFailedConnections() {
 	atomic.AddInt64(&m.FailedConnections, 1)
 }
 
-// Sets the current active connections count
+// SetActiveConnections sets the current active connections count
 func (m *Metrics) SetActiveConnections(count int64) {
 	atomic.StoreInt64(&m.ActiveConnections, count)
 }
 
-// Increments the total queries counter
+// IncrementQueries increments the total queries counter
 func (m *Metrics) IncrementQueries() {
 	atomic.AddInt64(&m.TotalQueries, 1)
 }
 
-// Increments the failed queries counter
+// IncrementFailedQueries increments the failed queries counter
 func (m *Metrics) IncrementFailedQueries() {
 	atomic.AddInt64(&m.FailedQueries, 1)
 }
 
-// Adds to the total query duration
+// AddQueryDuration adds to the total query duration
 func (m *Metrics) AddQueryDuration(duration time.Duration) {
 	atomic.AddInt64(&m.QueryDuration, duration.Nanoseconds())
 }
 
-// Increments the health checks counter
+// IncrementHealthChecks increments the health checks counter
 func (m *Metrics) IncrementHealthChecks() {
 	atomic.AddInt64(&m.HealthChecks, 1)
 }
 
-// Increments the failed health checks counter
+// IncrementFailedHealthChecks increments the failed health checks counter
 func (m *Metrics) IncrementFailedHealthChecks() {
 	atomic.AddInt64(&m.FailedHealthChecks, 1)
 }
 
-// Updates the last health check timestamp
+// UpdateLastHealthCheck updates the last health check timestamp
 func (m *Metrics) UpdateLastHealthCheck() {
 	atomic.StoreInt64(&m.LastHealthCheck, time.Now().Unix())
 }
 
-// Returns a copy of the current metrics
+// GetMetrics returns a copy of the current metrics
 func (m *Metrics) GetMetrics() Metrics {
 	return Metrics{
 		TotalConnections:    atomic.LoadInt64(&m.TotalConnections),

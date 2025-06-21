@@ -9,6 +9,13 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// Pool error definitions
+var (
+	ErrNilConfig          = fmt.Errorf("config cannot be nil")
+	ErrPoolConfigParse    = fmt.Errorf("unable to parse pool config")
+	ErrConnectionFailed   = fmt.Errorf("failed to create connection pool")
+)
+
 // Pool wraps pgxpool.Pool with additional functionality
 type Pool struct {
 	*pgxpool.Pool
@@ -18,25 +25,25 @@ type Pool struct {
 
 // NewPool creates a new database connection pool
 func NewPool(ctx context.Context, config *Config) (*Pool, error) {
-	// TODO: Validate config is not nil
+	// Validate config is not nil
 	if config == nil {
-		return nil, fmt.Errorf("can't parse config, ensure DATABASE_URL is correct.")
+		return nil, ErrNilConfig
 	}
 
-	// TODO: Create pgxpool config from connection string
+	// Create pgxpool config from connection string
 	pgxConfig, err := pgxpool.ParseConfig(config.ConnectionString())
 	if err != nil {
-		return nil, fmt.Errorf("unable to parse pool config: %w", err)
+		return nil, fmt.Errorf("%w: %v", ErrPoolConfigParse, err)
 	}
 
-	// TODO: Set pool configuration (max connections, timeouts, etc.)
+	// Set pool configuration (max connections, timeouts, etc.)
 	pgxConfig.MaxConns = config.MaxConns
 	pgxConfig.MinConns = config.MinConns
 	pgxConfig.MaxConnLifetime = config.MaxConnLifetime
 	pgxConfig.MaxConnIdleTime = config.MaxConnIdleTime
 	pgxConfig.ConnConfig.ConnectTimeout = config.ConnectTimeout
 
-	// TODO: Create pool with retry logic
+	// Create pool with retry logic
 	var pool *pgxpool.Pool
 	for i := 0; i <= config.MaxRetries; i++ {
 		pool, err = pgxpool.NewWithConfig(ctx, pgxConfig)
@@ -57,13 +64,13 @@ func NewPool(ctx context.Context, config *Config) (*Pool, error) {
 		}
 	}
 	if err != nil {
-		return nil, fmt.Errorf("failed to create connection pool after %d attempts: %w", config.MaxRetries+1, err)
+		return nil, fmt.Errorf("%w after %d attempts: %v", ErrConnectionFailed, config.MaxRetries+1, err)
 	}
 	
 	customPool := &Pool{
 		Pool:    pool,           // Embed the pgxpool.Pool
 		config:  config,         // Store the config
-		metrics: NewMetrics(),	 // Init pool metrics
+		metrics: NewMetrics(),	 // Initialize pool metrics
 	}
 
 	return customPool, nil

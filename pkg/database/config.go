@@ -10,36 +10,45 @@ import (
 	"time"
 )
 
+// Configuration error definitions
+var (
+	ErrDatabaseURLRequired = fmt.Errorf("DATABASE_URL environment variable is required")
+	ErrInvalidDatabaseURL  = fmt.Errorf("failed to parse DATABASE_URL")
+	ErrInvalidPort         = fmt.Errorf("invalid port number")
+	ErrDatabaseNameRequired = fmt.Errorf("database name is required in URL")
+	ErrPasswordRequired    = fmt.Errorf("password is required in DATABASE_URL")
+)
+
 // Config holds database connection configuration
 type Config struct {
-	Host string						// Adress	
-	Port int						// Port no
-	Database string					// Database connection string
-	Username string					// DB user
-	Password string					// DB user password
-	MaxConns int32					// Max # live connections
-	MinConns int32					// Min # live connections
-	MaxConnLifetime time.Duration 	// How long a single connection can exist before being recreated
-	MaxConnIdleTime time.Duration	// Idle timeout duration
-	ConnectTimeout time.Duration 	// Timeout on connecting to db
-	QueryTimeout time.Duration		// Timeout on query
-	MaxRetries int					// Max # retries
-	RetryInterval time.Duration		// Duration between retries
+	Host string						// Database host address
+	Port int						// Database port number
+	Database string					// Database name
+	Username string					// Database username
+	Password string					// Database password
+	MaxConns int32					// Maximum number of live connections
+	MinConns int32					// Minimum number of live connections
+	MaxConnLifetime time.Duration 	// Maximum lifetime of a single connection
+	MaxConnIdleTime time.Duration	// Maximum idle time before connection closure
+	ConnectTimeout time.Duration 	// Timeout for establishing connections
+	QueryTimeout time.Duration		// Timeout for individual queries
+	MaxRetries int					// Maximum number of connection retry attempts
+	RetryInterval time.Duration		// Duration between retry attempts
 	SSLMode string 					// SSL mode (disable, prefer, require)
 }
 
 // LoadConfigFromEnv loads database configuration from environment variables
 func LoadConfigFromEnv() (*Config, error) {
-	// Get db url .env
+	// Get database URL from environment
 	dbConnString := os.Getenv("DATABASE_URL")
 	if dbConnString == "" {
-		return nil, fmt.Errorf("DATABASE_URL environment variable is required")
+		return nil, ErrDatabaseURLRequired
 	}
 
-	// Parse url
+	// Parse database URL
 	u, err := url.Parse(dbConnString)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse DATABASE_URL: %w", err)
+		return nil, fmt.Errorf("%w: %v", ErrInvalidDatabaseURL, err)
 	}
 
 	// Parse host and port from URL.Host
@@ -48,29 +57,29 @@ func LoadConfigFromEnv() (*Config, error) {
 		return nil, fmt.Errorf("failed to split host:port: %w", err)
 	}
 
-	// Convert port from string literal to int
+	// Convert port from string to integer
 	portInt, err := strconv.Atoi(portStr)
 	if err != nil {
-		return nil, fmt.Errorf("invalid port number: %w", err)
+		return nil, fmt.Errorf("%w: %v", ErrInvalidPort, err)
 	}
 	
-	// Parse db
+	// Parse database name from URL path
 	_, db, found := strings.Cut(u.Path, "/")
 	if !found || db == "" {
-		return nil, fmt.Errorf("database name is required in URL")
+		return nil, ErrDatabaseNameRequired
 	}
 	
-	// Parse username and pass, ensure password exists
+	// Parse username and password, ensure password exists
 	username := u.User.Username()
 	password, hasPassword := u.User.Password()
 	if !hasPassword {
-		return nil, fmt.Errorf("password is required in DATABASE_URL")
+		return nil, ErrPasswordRequired
 	}
 
-	// Parse ssl mode from query in URL
+	// Parse SSL mode from URL query parameters
 	sslMode := u.Query().Get("sslmode")
 	if sslMode == "" {
-		// Set default if empty
+		// Set default SSL mode based on environment
 		if os.Getenv("ENVIRONMENT") == "dev" {
 			sslMode = "disable"
 		} else {
@@ -78,8 +87,7 @@ func LoadConfigFromEnv() (*Config, error) {
 		}
 	}
 
-	// Create config from parsed variables
-	// Set reasonable defaults for connection variables
+	// Create configuration with parsed values and reasonable defaults
 	config := Config{
 		Host:     			host,
 		Port:     			portInt,

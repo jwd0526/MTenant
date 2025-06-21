@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// Health status of the DB
+// HealthStatus represents the health status of the database
 type HealthStatus struct {
 	Healthy      bool          `json:"healthy"`
 	ResponseTime time.Duration `json:"response_time"`
@@ -27,11 +27,11 @@ type PoolStats struct {
 	TotalConns           int32 `json:"total_conns"`
 }
 
-// Performs a health check on the database connection
+// HealthCheck performs a health check on the database connection
 func (p *Pool) HealthCheck(ctx context.Context) *HealthStatus {
 	start := time.Now()
 	
-	// Creates a context with timeout for the health check
+	// Create a context with timeout for the health check
 	healthCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
@@ -39,7 +39,7 @@ func (p *Pool) HealthCheck(ctx context.Context) *HealthStatus {
 		Stats: p.getPoolStats(),
 	}
 
-	// Ping
+	// Perform ping test
 	if err := p.Pool.Ping(healthCtx); err != nil {
 		status.Healthy = false
 		status.Error = fmt.Sprintf("ping failed: %v", err)
@@ -47,7 +47,7 @@ func (p *Pool) HealthCheck(ctx context.Context) *HealthStatus {
 		return status
 	}
 
-	// Perform simple query
+	// Perform simple query test
 	var result int
 	err := p.Pool.QueryRow(healthCtx, "SELECT 1").Scan(&result)
 	if err != nil {
@@ -69,7 +69,7 @@ func (p *Pool) HealthCheck(ctx context.Context) *HealthStatus {
 	return status
 }
 
-// Converts pgxpool.Stat to our PoolStats structure
+// getPoolStats converts pgxpool.Stat to our PoolStats structure
 func (p *Pool) getPoolStats() *PoolStats {
 	stats := p.Pool.Stat()
 	return &PoolStats{
@@ -85,7 +85,7 @@ func (p *Pool) getPoolStats() *PoolStats {
 	}
 }
 
-// Returns true if the database is healthy
+// IsHealthy returns true if the database is healthy
 func (p *Pool) IsHealthy(ctx context.Context) bool {
 	return p.HealthCheck(ctx).Healthy
 }
