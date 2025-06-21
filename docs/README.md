@@ -39,7 +39,6 @@ This directory contains comprehensive documentation for the multi-tenant CRM pla
 2. [Makefile Reference](./development/makefile.md) - Learn the build commands
 3. [Service Architecture](./architecture/services.md) - Understand the system design
 4. [Database Design](./architecture/database.md) - Learn the multi-tenant data model
-5. [Implementation Status](./implementation-status.md) - Current progress and next steps
 
 ## Implementation Status
 
