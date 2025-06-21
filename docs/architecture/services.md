@@ -51,16 +51,18 @@ The MTenant CRM uses a microservices architecture with five core services, each 
 - `users` - User accounts with roles and permissions
 - `password_reset_tokens` - Temporary tokens for password recovery
 
-**Key Endpoints:**
+**Planned Endpoints:**
 ```
-POST   /api/auth/register      # User registration
-POST   /api/auth/login         # Authentication
-POST   /api/auth/refresh       # Token refresh
-GET    /api/auth/profile       # User profile
-POST   /api/auth/logout        # Session termination
-POST   /api/auth/forgot        # Password reset request
-POST   /api/auth/reset         # Password reset confirmation
+POST   /api/auth/register      # User registration (planned)
+POST   /api/auth/login         # Authentication (planned)
+POST   /api/auth/refresh       # Token refresh (planned)
+GET    /api/auth/profile       # User profile (planned)
+POST   /api/auth/logout        # Session termination (planned)
+POST   /api/auth/forgot        # Password reset request (planned)
+POST   /api/auth/reset         # Password reset confirmation (planned)
 ```
+
+**Current Status**: Endpoints not yet implemented - service has placeholder main.go
 
 ### Tenant Service (`services/tenant-service/`)
 
@@ -77,13 +79,13 @@ POST   /api/auth/reset         # Password reset confirmation
 - `tenants` - Organization registry (global table)
 - `invitations` - Cross-tenant invitation system
 
-**Key Endpoints:**
+**Planned Endpoints:**
 ```
-POST   /api/tenants/register   # Organization registration
-GET    /api/tenants/current    # Current tenant info
-POST   /api/tenants/invite     # Send user invitation
-GET    /api/tenants/users      # List tenant users
-PUT    /api/tenants/settings   # Update tenant configuration
+POST   /api/tenants/register   # Organization registration (planned)
+GET    /api/tenants/current    # Current tenant info (planned)
+POST   /api/tenants/invite     # Send user invitation (planned)
+GET    /api/tenants/users      # List tenant users (planned)
+PUT    /api/tenants/settings   # Update tenant configuration (planned)
 ```
 
 **Schema Creation Process:**
@@ -109,19 +111,19 @@ PUT    /api/tenants/settings   # Update tenant configuration
 - `contacts` - Individual contact records
 - `companies` - Business entities with parent-child support
 
-**Key Endpoints:**
+**Planned Endpoints:**
 ```
-POST   /api/contacts           # Create contact
-GET    /api/contacts/:id       # Get contact details
-PUT    /api/contacts/:id       # Update contact
-DELETE /api/contacts/:id       # Soft delete contact
-GET    /api/contacts           # List/search contacts
-POST   /api/contacts/import    # Bulk import
-GET    /api/contacts/export    # Data export
+POST   /api/contacts           # Create contact (planned)
+GET    /api/contacts/:id       # Get contact details (planned)
+PUT    /api/contacts/:id       # Update contact (planned)
+DELETE /api/contacts/:id       # Soft delete contact (planned)
+GET    /api/contacts           # List/search contacts (planned)
+POST   /api/contacts/import    # Bulk import (planned)
+GET    /api/contacts/export    # Data export (planned)
 
-POST   /api/companies          # Create company
-GET    /api/companies/:id      # Get company details
-GET    /api/companies          # List companies
+POST   /api/companies          # Create company (planned)
+GET    /api/companies/:id      # Get company details (planned)
+GET    /api/companies          # List companies (planned)
 ```
 
 ### Deal Service (`services/deal-service/`)
@@ -139,15 +141,17 @@ GET    /api/companies          # List companies
 - `deals` - Sales opportunities with stage tracking
 - `deal_contacts` - Many-to-many contact associations
 
-**Key Endpoints:**
+**Planned Endpoints:**
 ```
-POST   /api/deals              # Create opportunity
-GET    /api/deals/:id          # Get deal details
-PUT    /api/deals/:id          # Update deal/change stage
-GET    /api/deals              # Pipeline view
-GET    /api/deals/analytics    # Revenue analytics
-POST   /api/deals/:id/contacts # Associate contacts
+POST   /api/deals              # Create opportunity (planned)
+GET    /api/deals/:id          # Get deal details (planned)
+PUT    /api/deals/:id          # Update deal/change stage (planned)
+GET    /api/deals              # Pipeline view (planned)
+GET    /api/deals/analytics    # Revenue analytics (planned)
+POST   /api/deals/:id/contacts # Associate contacts (planned)
 ```
+
+**Current Status**: SQLC configuration exists but generated code missing (needs `sqlc generate`)
 
 ### Communication Service (`services/communication-service/`)
 
@@ -160,45 +164,49 @@ POST   /api/deals/:id/contacts # Associate contacts
 - Communication analytics and tracking
 - Task management and reminders
 
-**Database Schema:**
-- `activities` - All customer interactions
-- `email_templates` - Communication templates
-- `email_tracking` - Delivery and engagement metrics
+**Planned Database Schema:**
+- `activities` - All customer interactions (planned)
+- `email_templates` - Communication templates (planned)
+- `email_tracking` - Delivery and engagement metrics (planned)
 
-**Key Endpoints:**
+**Planned Endpoints:**
 ```
-POST   /api/activities         # Log activity
-GET    /api/activities         # Activity timeline
-POST   /api/emails/send        # Send email
-GET    /api/emails/templates   # Email templates
-POST   /api/tasks              # Create task/reminder
+POST   /api/activities         # Log activity (planned)
+GET    /api/activities         # Activity timeline (planned)
+POST   /api/emails/send        # Send email (planned)
+GET    /api/emails/templates   # Email templates (planned)
+POST   /api/tasks              # Create task/reminder (planned)
 ```
+
+**Current Status**: No SQLC implementation - requires complete setup (sqlc.yaml, schema, queries)
 
 ## Inter-Service Communication
 
-### Synchronous Communication (HTTP)
+**Current Status**: Service-to-service communication is planned but not yet implemented. All services currently contain placeholder main.go files.
 
-**Direct API Calls:**
-- Frontend to services for user interactions
-- Service-to-service for immediate data requirements
-- Real-time validation and data retrieval
+### Planned Synchronous Communication (HTTP)
 
-**Example Flow - Contact Creation:**
+**Planned Direct API Calls:**
+- Frontend to services for user interactions (planned)
+- Service-to-service for immediate data requirements (planned)
+- Real-time validation and data retrieval (planned)
+
+**Planned Flow - Contact Creation:**
 ```
-Frontend → Contact Service: POST /api/contacts
-Contact Service → Auth Service: GET /api/auth/validate-token
-Contact Service → Database: INSERT INTO contacts
-Contact Service → Frontend: 201 Created
+Frontend → Contact Service: POST /api/contacts (planned)
+Contact Service → Auth Service: GET /api/auth/validate-token (planned)
+Contact Service → Database: INSERT INTO contacts (planned)
+Contact Service → Frontend: 201 Created (planned)
 ```
 
-### Asynchronous Communication (NATS)
+### Planned Asynchronous Communication (NATS)
 
-**Event-Driven Messaging:**
-Services publish events for decoupled operations and cross-service notifications.
+**Planned Event-Driven Messaging:**
+Services will publish events for decoupled operations and cross-service notifications (planned).
 
-**Event Patterns:**
+**Planned Event Patterns:**
 ```go
-// Event structure
+// Planned event structure
 type Event struct {
     Type      string                 `json:"type"`
     TenantID  string                 `json:"tenant_id"`
@@ -208,55 +216,55 @@ type Event struct {
 }
 ```
 
-**Key Events:**
+**Planned Key Events:**
 
-**Auth Service Events:**
-- `user.created` - New user registration
-- `user.login` - Successful authentication
-- `user.password_reset` - Password reset completed
+**Auth Service Events (planned):**
+- `user.created` - New user registration (planned)
+- `user.login` - Successful authentication (planned)
+- `user.password_reset` - Password reset completed (planned)
 
-**Tenant Service Events:**
-- `tenant.created` - New organization registered
-- `tenant.user_invited` - User invitation sent
-- `tenant.user_joined` - Invitation accepted
+**Tenant Service Events (planned):**
+- `tenant.created` - New organization registered (planned)
+- `tenant.user_invited` - User invitation sent (planned)
+- `tenant.user_joined` - Invitation accepted (planned)
 
-**Contact Service Events:**
-- `contact.created` - New contact added
-- `contact.updated` - Contact information changed
-- `company.created` - New company added
+**Contact Service Events (planned):**
+- `contact.created` - New contact added (planned)
+- `contact.updated` - Contact information changed (planned)
+- `company.created` - New company added (planned)
 
-**Deal Service Events:**
-- `deal.created` - New opportunity opened
-- `deal.stage_changed` - Pipeline progression
-- `deal.closed_won` - Successful deal closure
-- `deal.closed_lost` - Lost opportunity
+**Deal Service Events (planned):**
+- `deal.created` - New opportunity opened (planned)
+- `deal.stage_changed` - Pipeline progression (planned)
+- `deal.closed_won` - Successful deal closure (planned)
+- `deal.closed_lost` - Lost opportunity (planned)
 
-**Communication Service Events:**
-- `email.sent` - Outbound email
-- `email.opened` - Email engagement tracking
-- `activity.logged` - Customer interaction recorded
+**Communication Service Events (planned):**
+- `email.sent` - Outbound email (planned)
+- `email.opened` - Email engagement tracking (planned)
+- `activity.logged` - Customer interaction recorded (planned)
 
-### Event Flow Examples
+### Planned Event Flow Examples
 
-**User Registration Flow:**
+**Planned User Registration Flow:**
 ```
-1. Frontend → Auth Service: POST /api/auth/register
-2. Auth Service → Database: Create user record
-3. Auth Service → NATS: Publish user.created event
-4. Communication Service ← NATS: Receive user.created
-5. Communication Service: Send welcome email
-6. Tenant Service ← NATS: Receive user.created  
-7. Tenant Service: Setup default user preferences
+1. Frontend → Auth Service: POST /api/auth/register (planned)
+2. Auth Service → Database: Create user record (planned)
+3. Auth Service → NATS: Publish user.created event (planned)
+4. Communication Service ← NATS: Receive user.created (planned)
+5. Communication Service: Send welcome email (planned)
+6. Tenant Service ← NATS: Receive user.created (planned)
+7. Tenant Service: Setup default user preferences (planned)
 ```
 
-**Deal Closure Flow:**
+**Planned Deal Closure Flow:**
 ```
-1. Frontend → Deal Service: PUT /api/deals/123 {stage: "closed_won"}
-2. Deal Service → Database: Update deal record
-3. Deal Service → NATS: Publish deal.closed_won event
-4. Communication Service ← NATS: Receive deal.closed_won
-5. Communication Service: Log "Deal Closed Won" activity
-6. Communication Service: Trigger follow-up email sequence
+1. Frontend → Deal Service: PUT /api/deals/123 {stage: "closed_won"} (planned)
+2. Deal Service → Database: Update deal record (planned)
+3. Deal Service → NATS: Publish deal.closed_won event (planned)
+4. Communication Service ← NATS: Receive deal.closed_won (planned)
+5. Communication Service: Log "Deal Closed Won" activity (planned)
+6. Communication Service: Trigger follow-up email sequence (planned)
 ```
 
 ## Service Implementation
@@ -267,27 +275,35 @@ Each service follows this directory pattern:
 
 ```
 services/{service-name}/
-├── cmd/server/main.go          # Application entry point
+├── cmd/server/
+│   ├── main.go                 # Application entry point (currently placeholder)
+│   └── main_test.go            # Main function tests
 ├── internal/
-│   ├── db/                     # SQLC generated code
-│   ├── handlers/               # HTTP request handlers
-│   ├── middleware/             # Authentication, logging
-│   ├── services/               # Business logic
-│   └── models/                 # Domain models
-├── db/
+│   ├── db/                     # SQLC generated code (implemented in auth/tenant/contact)
+│   ├── benchmark_test.go       # Performance benchmarks
+│   └── utils_test.go           # Utility tests
+├── db/                         # Database definitions
 │   ├── queries/                # SQL query definitions  
 │   └── schema/                 # Database schema
 ├── Dockerfile                  # Container definition
-├── go.mod                      # Go module dependencies (includes pkg/database)
+├── go.mod                      # Go module dependencies
 └── sqlc.yaml                   # SQLC configuration
 ```
 
+**Current Implementation Status:**
+- **main.go files**: Currently contain placeholder "Hello World" implementations
+- **HTTP handlers**: Not yet implemented
+- **Business logic**: Not yet implemented
+- **Service-to-service communication**: Not yet implemented
+
 ### Shared Database Package Integration
 
-All services use the shared `pkg/database` package for standardized database connectivity:
+**Current Status**: Services currently contain placeholder main.go files. Full implementation is planned.
+
+All services will use the shared `pkg/database` package for standardized database connectivity:
 
 ```go
-// Service main.go pattern
+// Planned service main.go pattern
 package main
 
 import (
@@ -301,41 +317,48 @@ import (
 func main() {
     ctx := context.Background()
     
-    // Load database configuration from environment
+    // Load database configuration from environment (planned)
     dbConfig, err := database.LoadConfigFromEnv()
     if err != nil {
         log.Fatal("Failed to load database config:", err)
     }
     
-    // Create connection pool with retry logic and monitoring
+    // Create connection pool with retry logic and monitoring (planned)
     dbPool, err := database.NewPool(ctx, dbConfig)
     if err != nil {
         log.Fatal("Failed to create database pool:", err)
     }
     defer dbPool.Close()
     
-    // Verify database health on startup
+    // Verify database health on startup (planned)
     health := dbPool.HealthCheck(ctx)
     if !health.Healthy {
         log.Fatal("Database health check failed:", health.Error)
     }
     log.Printf("Database connected in %v", health.ResponseTime)
     
-    // Create SQLC queries instance with shared pool
+    // Create SQLC queries instance with shared pool (planned)
     queries := db.New(dbPool)
     
-    // Initialize service handlers
+    // Initialize service handlers (planned)
     handler := NewHandler(queries, dbPool)
     
-    // Start HTTP server
+    // Start HTTP server (planned)
     log.Println("Service starting on :8080")
     log.Fatal(http.ListenAndServe(":8080", handler))
 }
+
+// Current actual implementation (placeholder):
+// func main() {
+//     fmt.Println("Hello from [service-name]!")
+// }
 ```
 
-### Authentication Middleware
+### Planned Authentication Middleware
 
-All services (except Auth) use token validation middleware:
+**Current Status**: Authentication middleware is planned but not yet implemented.
+
+All services (except Auth) will use token validation middleware:
 
 ```go
 func AuthMiddleware(authServiceURL string) gin.HandlerFunc {
@@ -366,9 +389,11 @@ func AuthMiddleware(authServiceURL string) gin.HandlerFunc {
 }
 ```
 
-### Tenant Context Injection
+### Planned Tenant Context Injection
 
-Database queries automatically use tenant context with the shared database pool:
+**Current Status**: Tenant context injection is planned but not yet implemented.
+
+Database queries will automatically use tenant context with the shared database pool:
 
 ```go
 func (h *ContactHandler) GetContact(c *gin.Context) {
@@ -474,7 +499,7 @@ c.JSON(400, ErrorResponse{
 
 ## Health Checks
 
-Each service implements standardized health check endpoints using the shared database package:
+**Planned Implementation**: Each service will implement standardized health check endpoints using the shared database package:
 
 ```go
 func (h *Handler) HealthCheck(c *gin.Context) {
@@ -587,9 +612,9 @@ cd services/tenant-service && go test -v ./...
 # etc.
 ```
 
-### Integration Tests
+### Planned Integration Tests
 
-Test inter-service communication:
+Planned tests for inter-service communication:
 
 ```go
 func TestContactCreationFlow(t *testing.T) {

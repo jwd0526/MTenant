@@ -142,10 +142,7 @@ MTenant/
 ### Building Services
 
 ```bash
-# Build shared packages first (automatically included in make build)
-make build-pkg
-
-# Build all services (includes shared packages)
+# Build all services
 make build
 
 # Build specific service
@@ -159,11 +156,8 @@ make build-communication-service
 ### Running Tests
 
 ```bash
-# Run all tests (includes shared packages)
+# Run all tests
 make test
-
-# Run tests for shared packages only
-make test-pkg
 
 # Run tests for specific service
 cd services/auth-service && go test -v ./...

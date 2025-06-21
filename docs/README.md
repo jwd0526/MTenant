@@ -39,17 +39,20 @@ This directory contains comprehensive documentation for the multi-tenant CRM pla
 2. [Makefile Reference](./development/makefile.md) - Learn the build commands
 3. [Service Architecture](./architecture/services.md) - Understand the system design
 4. [Database Design](./architecture/database.md) - Learn the multi-tenant data model
+5. [Implementation Status](./implementation-status.md) - Current progress and next steps
 
 ## Implementation Status
 
-✅ **Completed through Ticket 1.2.11:**
+✅ **Completed through Ticket 1.2.14:**
 - Project structure and Go modules
 - Docker infrastructure setup
 - Database schemas for all services
-- SQLC configurations and code generation
-- Service skeletons and basic structure
+- SQLC configurations and code generation (auth, tenant, contact services)
+- Database migrations (tenant registry and schema template)
+- Shared database connection pool package
+- Service skeletons with basic structure
 
 🔄 **Next Steps:**
-- Install golang-migrate tool (Ticket 1.2.11)
-- Create initial database migrations  
+- Create tenant-aware database connection package (Ticket 1.2.15)
+- Complete SQLC setup for deal and communication services
 - Implement service handlers and business logic

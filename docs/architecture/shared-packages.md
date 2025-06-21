@@ -294,29 +294,26 @@ require (
 
 ### Build System Integration
 
-**Makefile Updates:**
+**Current Status**: The shared packages are automatically built and tested as part of the Go workspace. No special Makefile targets are needed.
+
+**Integration via Go Workspace:**
 ```makefile
-# Build shared packages first
-build-pkg:
-	@echo "Building shared packages..."
-	@cd pkg && go build ./...
-	@echo "✓ Shared packages built"
+# Shared packages are automatically included via go.work
+# No special build targets needed - Go workspace handles dependencies
 
-# Include pkg in build process
-build: build-pkg $(BUILD_TARGETS)
+# Build all services (includes shared packages automatically)
+build: $(BUILD_TARGETS)
 
-# Test shared packages
-test-pkg:
-	@echo "Testing shared packages..."
-	@cd pkg && go test -v ./...
-
-# Include pkg in test process  
-test: test-pkg
+# Test all services (includes shared packages automatically)  
+test:
 	for service in $(SERVICES); do \
 		cd $(PWD); \
 		echo "Testing $$service..."; \
 		cd services/$$service && go test -v ./...; \
 	done
+
+# Test shared packages independently (manual)
+# cd pkg && go test -v ./...
 ```
 
 ## Testing
@@ -415,21 +412,39 @@ func (h *Handler) MetricsHandler(c *gin.Context) {
 }
 ```
 
-## Future Extensions
+## Current Limitations
 
-### Planned Enhancements
+### Missing Tenant-Aware Features (Ticket 1.2.15)
 
-**Connection Middleware:**
+The current `pkg/database` package provides excellent basic connection pooling but **does not yet implement tenant-aware functionality**:
+
+**Not Yet Implemented:**
+- ❌ Tenant schema switching based on context
+- ❌ Thread-safe tenant context management
+- ❌ Per-tenant connection routing
+- ❌ Automatic schema validation before queries
+- ❌ Tenant-specific connection metrics
+
+**Usage Impact:**
+Services must manually manage tenant schema switching:
+```go
+// Current manual approach (will be automated in 1.2.15)
+_, err := dbPool.Exec(ctx, "SET search_path = $1", tenantSchema)
+```
+
+### Planned Enhancements (Post-1.2.15)
+
+**Advanced Connection Features:**
 - Query logging and tracing
 - Automatic retry for specific errors
 - Circuit breaker pattern
-- Query timeout enforcement
+- Query timeout enforcement per tenant
 
-**Advanced Metrics:**
-- Query performance histograms
-- Connection pool efficiency metrics
-- Tenant-specific query statistics
+**Enhanced Metrics:**
+- Query performance histograms per tenant
+- Tenant-specific connection pool metrics
 - Slow query detection and logging
+- Resource usage monitoring per tenant
 
 **Multi-Database Support:**
 - Read/write split capability
