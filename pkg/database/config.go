@@ -80,7 +80,8 @@ func LoadConfigFromEnv() (*Config, error) {
 	sslMode := u.Query().Get("sslmode")
 	if sslMode == "" {
 		// Set default SSL mode based on environment
-		if os.Getenv("ENVIRONMENT") == "dev" {
+		env := strings.ToLower(os.Getenv("ENVIRONMENT"))
+		if env == "dev" || env == "development" || env == "" {
 			sslMode = "disable"
 		} else {
 			sslMode = "prefer"

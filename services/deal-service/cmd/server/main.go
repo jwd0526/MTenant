@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"crm-platform/deal-service/database"
+	"crm-platform/pkg/database"
 	"crm-platform/deal-service/internal/errors"
 	"crm-platform/deal-service/internal/handlers"
 	"crm-platform/deal-service/internal/middleware"

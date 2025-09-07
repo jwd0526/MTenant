@@ -35,39 +35,59 @@ func NewTenantPool(pool *database.Pool) *TenantPool {
 
 // Query executes a query with tenant context isolation
 func (tp *TenantPool) Query(ctx context.Context, sql string, args ...interface{}) (pgx.Rows, error) {
-    wrappedSQL, err := tp.wrapWithTenantSchema(ctx, sql)
-    if err != nil {
-        return nil, err
+    // SECURITY: Explicit tenant validation - fail fast if no tenant context
+    if !HasTenant(ctx) {
+        return nil, fmt.Errorf("SECURITY VIOLATION: database operation attempted without tenant context")
     }
     
-    return tp.Pool.Query(ctx, wrappedSQL, args...)
+    // Always set search path before each query to handle connection reuse
+    if err := tp.ensureTenantSearchPath(ctx); err != nil {
+        return nil, fmt.Errorf("SECURITY: tenant isolation failed: %w", err)
+    }
+    
+    return tp.Pool.Query(ctx, sql, args...)
 }
 
 // QueryRow executes a query that returns a single row with tenant context
 func (tp *TenantPool) QueryRow(ctx context.Context, sql string, args ...interface{}) pgx.Row {
-    wrappedSQL, err := tp.wrapWithTenantSchema(ctx, sql)
-    if err != nil {
-        return &errorRow{err: err}
+    // SECURITY: Explicit tenant validation - fail fast if no tenant context
+    if !HasTenant(ctx) {
+        return &errorRow{err: fmt.Errorf("SECURITY VIOLATION: database operation attempted without tenant context")}
     }
     
-    return tp.Pool.QueryRow(ctx, wrappedSQL, args...)
+    // Always set search path before each query to handle connection reuse
+    if err := tp.ensureTenantSearchPath(ctx); err != nil {
+        return &errorRow{err: fmt.Errorf("SECURITY: tenant isolation failed: %w", err)}
+    }
+    
+    return tp.Pool.QueryRow(ctx, sql, args...)
 }
 
 // Exec executes a command with tenant context isolation
 func (tp *TenantPool) Exec(ctx context.Context, sql string, args ...interface{}) (pgconn.CommandTag, error) {
-    wrappedSQL, err := tp.wrapWithTenantSchema(ctx, sql)
-    if err != nil {
-        return pgconn.CommandTag{}, err
+    // SECURITY: Explicit tenant validation - fail fast if no tenant context
+    if !HasTenant(ctx) {
+        return pgconn.CommandTag{}, fmt.Errorf("SECURITY VIOLATION: database operation attempted without tenant context")
     }
     
-    return tp.Pool.Exec(ctx, wrappedSQL, args...)
+    // Set search path first
+    if err := tp.ensureTenantSearchPath(ctx); err != nil {
+        return pgconn.CommandTag{}, fmt.Errorf("SECURITY: tenant isolation failed: %w", err)
+    }
+    
+    return tp.Pool.Exec(ctx, sql, args...)
 }
 
 // Begin starts a tenant-aware transaction
 func (tp *TenantPool) Begin(ctx context.Context) (*TenantTx, error) {
+    // SECURITY: Explicit tenant validation - fail fast if no tenant context
+    if !HasTenant(ctx) {
+        return nil, fmt.Errorf("SECURITY VIOLATION: database operation attempted without tenant context")
+    }
+    
     schemaName, err := ExtractTenantSchema(ctx)
     if err != nil {
-        return nil, err
+        return nil, fmt.Errorf("SECURITY: tenant isolation failed: %w", err)
     }
     
     tx, err := tp.Pool.Begin(ctx)
@@ -118,14 +138,14 @@ func (tp *TenantPool) HealthCheck(ctx context.Context) *database.HealthStatus {
     return tp.Pool.HealthCheck(ctx)
 }
 
-// wrapWithTenantSchema extracts tenant schema and wraps SQL with search path
-func (tp *TenantPool) wrapWithTenantSchema(ctx context.Context, sql string) (string, error) {
+// ensureTenantSearchPath sets the search path for the current connection
+func (tp *TenantPool) ensureTenantSearchPath(ctx context.Context) error {
     schemaName, err := ExtractTenantSchema(ctx)
     if err != nil {
-        return "", fmt.Errorf("%w: %v", ErrSchemaWrapFailure, err)
+        return fmt.Errorf("%w: %v", ErrSchemaWrapFailure, err)
     }
     
-    return fmt.Sprintf(`SET search_path TO "%s", public; %s`, schemaName, sql), nil
+    return SetSearchPath(ctx, tp.Pool, schemaName)
 }
 
 // errorRow implements pgx.Row for error cases

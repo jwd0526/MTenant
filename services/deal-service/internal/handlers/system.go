@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"crm-platform/deal-service/database"
+	"crm-platform/pkg/database"
 	"github.com/gin-gonic/gin"
 )
 

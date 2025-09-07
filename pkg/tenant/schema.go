@@ -27,8 +27,8 @@ var (
     ErrSeedDataFailure      = fmt.Errorf("failed to copy seed data")
 )
 
-// Schema name validation regex - PostgreSQL identifier rules
-var schemaNamePattern = regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*$`)
+// Schema name validation regex - PostgreSQL identifier rules (allow hyphens for UUIDs)
+var schemaNamePattern = regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_-]*$`)
 
 // GenerateSchemaName converts tenant ID to PostgreSQL schema name
 func GenerateSchemaName(tenantID string) string {
@@ -184,11 +184,29 @@ func getTableNames(ctx context.Context, pool *database.Pool, schemaName string) 
 
 // copyTable copies a single table structure from source to target schema
 func copyTable(ctx context.Context, pool *database.Pool, sourceSchema, targetSchema, tableName string) error {
+    // First, check if table already exists
+    existsSQL := fmt.Sprintf(`SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = '%s' AND table_name = '%s'
+    )`, targetSchema, tableName)
+    
+    var exists bool
+    err := pool.QueryRow(ctx, existsSQL).Scan(&exists)
+    if err != nil {
+        return fmt.Errorf("failed to check table existence: %v", err)
+    }
+    
+    if exists {
+        log.Printf("Table %s.%s already exists, skipping", targetSchema, tableName)
+        return nil
+    }
+    
+    // Use INCLUDING DEFAULTS CONSTRAINTS INDEXES instead of ALL to avoid sequence conflicts
     sql := fmt.Sprintf(`CREATE TABLE "%s"."%s" 
-                       (LIKE "%s"."%s" INCLUDING ALL)`, 
+                       (LIKE "%s"."%s" INCLUDING DEFAULTS INCLUDING CONSTRAINTS INCLUDING INDEXES)`, 
                        targetSchema, tableName, sourceSchema, tableName)
     
-    _, err := pool.Exec(ctx, sql)
+    _, err = pool.Exec(ctx, sql)
     if err != nil {
         return fmt.Errorf("%w: %s from %s to %s: %v", 
             ErrTableCopyFailure, tableName, sourceSchema, targetSchema, err)
@@ -202,8 +220,10 @@ func copySeedData(ctx context.Context, pool *database.Pool, sourceSchema, target
     seedTables := []string{"roles", "settings", "default_pipeline_stages"}
 
     for _, tableName := range seedTables {
+        // Use ON CONFLICT DO NOTHING to make seed data insertion idempotent
         sql := fmt.Sprintf(`INSERT INTO "%s"."%s" 
-                           SELECT * FROM "%s"."%s"`, 
+                           SELECT * FROM "%s"."%s"
+                           ON CONFLICT DO NOTHING`, 
                            targetSchema, tableName, sourceSchema, tableName)
         
         _, err := pool.Exec(ctx, sql)

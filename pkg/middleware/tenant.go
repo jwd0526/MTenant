@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"crm-platform/deal-service/internal/errors"
+	"crm-platform/pkg/errors"
 	"crm-platform/pkg/tenant"
 
 	"github.com/gin-gonic/gin"

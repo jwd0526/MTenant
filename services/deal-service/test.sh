@@ -26,13 +26,13 @@ echo "Setting up test-tenants"
 
 # Restart crusty ass old ass tenants and birth new ones
 
-go run tests/setup_test_tenants.go reset
+go run ../../scripts/setup_test_tenants.go reset
 
 echo "Verifying setup"
 
 # make sure they made it ;)
 
-go run tests/setup_test_tenants.g o verify
+go run ../../scripts/setup_test_tenants.go verify
 
 echo "Running tests..." 
 

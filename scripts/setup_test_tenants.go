@@ -6,8 +6,8 @@ import (
 	"log"
 	"os"
 
-	"crm-platform/deal-service/database"
-	"crm-platform/deal-service/tenant"
+	"crm-platform/pkg/database"
+	"crm-platform/pkg/tenant"
 )
 
 // Test tenant setup script - minimal tenant operations needed for deal-service testing
@@ -182,7 +182,7 @@ func verifyTestTenants() {
 		os.Exit(0)
 	} else {
 		log.Println("❌ Some test tenant schemas are missing or incomplete")
-		log.Println("Run: go run tests/setup_test_tenants.go setup")
+		log.Println("Run: go run scripts/setup_test_tenants.go setup")
 		os.Exit(1)
 	}
 }

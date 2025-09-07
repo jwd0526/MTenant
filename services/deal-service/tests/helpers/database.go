@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"crm-platform/deal-service/database"
-	"crm-platform/deal-service/tenant"
+	"crm-platform/pkg/database"
+	"crm-platform/pkg/tenant"
 
 	"github.com/stretchr/testify/require"
 )
@@ -74,7 +74,7 @@ func (td *TestDatabase) UsePredefinedTenant(tenantID string) {
 	schemaName := tenant.GenerateSchemaName(tenantID)
 	exists, err := tenant.SchemaExists(ctx, td.Pool, schemaName)
 	require.NoError(td.t, err, "Failed to check if tenant schema exists: %s", schemaName)
-	require.True(td.t, exists, "Test tenant schema %s does not exist. Run: go run tests/setup_test_tenants.go setup", schemaName)
+	require.True(td.t, exists, "Test tenant schema %s does not exist. Run: go run ../../scripts/setup_test_tenants.go setup", schemaName)
 
 	// Store tenant context for reuse
 	td.activeTenants[tenantID] = tenantCtx

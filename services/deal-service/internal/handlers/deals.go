@@ -1,11 +1,11 @@
 package handlers
 
 import (
-	"crm-platform/deal-service/database"
 	"crm-platform/deal-service/internal/db"
 	"crm-platform/deal-service/internal/errors"
 	"crm-platform/deal-service/internal/models"
-	"crm-platform/deal-service/tenant"
+	"crm-platform/pkg/database"
+	"crm-platform/pkg/tenant"
 	"database/sql"
 	"fmt"
 

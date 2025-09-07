@@ -1,6 +1,6 @@
 package helpers
 
-// Predefined test tenant IDs - these must be created by setup_test_tenants.go script
+// Predefined test tenant IDs - these must be created by ../../scripts/setup_test_tenants.go script
 const (
 	TestTenant1 = "123e4567-e89b-12d3-a456-426614174000"
 	TestTenant2 = "456e7890-e89b-12d3-a456-426614174111"  
