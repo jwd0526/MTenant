@@ -1,9 +1,9 @@
 -- name: CreateDeal :one
 INSERT INTO deals (
     title, value, probability, stage, primary_contact_id, company_id, 
-    owner_id, expected_close_date, deal_source, description, notes, created_by
+    owner_id, expected_close_date, source, description, created_by
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
 ) RETURNING *;
 
 -- name: GetDealByID :one
@@ -12,9 +12,9 @@ SELECT d.*,
        comp.name as company_name,
        u.first_name || ' ' || u.last_name as owner_name
 FROM deals d
-LEFT JOIN contacts c ON d.primary_contact_id = c.id AND c.deleted_at IS NULL
-LEFT JOIN companies comp ON d.company_id = comp.id AND comp.deleted_at IS NULL
-LEFT JOIN users u ON d.owner_id = u.id AND u.deleted_at IS NULL
+LEFT JOIN contacts c ON d.primary_contact_id = c.id
+LEFT JOIN companies comp ON d.company_id = comp.id
+LEFT JOIN users u ON d.owner_id = u.id AND u.status = 'active'
 WHERE d.id = $1;
 
 -- name: ListDeals :many
@@ -23,18 +23,21 @@ SELECT d.*,
        comp.name as company_name,
        u.first_name || ' ' || u.last_name as owner_name
 FROM deals d
-LEFT JOIN contacts c ON d.primary_contact_id = c.id AND c.deleted_at IS NULL
-LEFT JOIN companies comp ON d.company_id = comp.id AND comp.deleted_at IS NULL
-LEFT JOIN users u ON d.owner_id = u.id AND u.deleted_at IS NULL
+LEFT JOIN contacts c ON d.primary_contact_id = c.id
+LEFT JOIN companies comp ON d.company_id = comp.id
+LEFT JOIN users u ON d.owner_id = u.id AND u.status = 'active'
 ORDER BY d.created_at DESC
 LIMIT $1 OFFSET $2;
+
+-- name: CountDeals :one
+SELECT COUNT(*) FROM deals;
 
 -- name: UpdateDeal :one
 UPDATE deals 
 SET title = $2, value = $3, probability = $4, stage = $5,
     primary_contact_id = $6, company_id = $7, owner_id = $8,
-    expected_close_date = $9, deal_source = $10, description = $11,
-    notes = $12, updated_by = $13, updated_at = NOW()
+    expected_close_date = $9, source = $10, description = $11,
+    updated_at = NOW()
 WHERE id = $1
 RETURNING *;
 
@@ -73,7 +76,7 @@ ORDER BY forecast_month;
 
 -- name: CloseDeal :one
 UPDATE deals 
-SET stage = $2, actual_close_date = $3, updated_by = $4, updated_at = NOW()
+SET stage = $2, actual_close_date = $3, updated_at = NOW()
 WHERE id = $1
 RETURNING *;
 
@@ -84,3 +87,6 @@ JOIN users u ON d.owner_id = u.id
 WHERE d.actual_close_date >= $1 AND d.stage = 'Closed Won'
 GROUP BY u.id, u.first_name, u.last_name
 ORDER BY total_revenue DESC;
+
+-- name: DeleteDeal :execrows
+DELETE FROM deals WHERE id = $1;

@@ -14,6 +14,6 @@ FROM alpine:latest
 
 WORKDIR /
 
-COPY --from=builder bin/deal-service ./cmd/server
+COPY --from=builder bin/deal-service /bin/deal-service
 
 CMD ["/bin/deal-service"]

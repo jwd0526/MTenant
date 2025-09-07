@@ -1,21 +1,22 @@
 CREATE TABLE deals (
    id SERIAL PRIMARY KEY,
-   title VARCHAR(200) NOT NULL,
-   value DECIMAL(12,2),
-   probability DECIMAL(5,2) CHECK (probability >= 0 AND probability <= 100),
-   stage VARCHAR(50) NOT NULL,
-   primary_contact_id INTEGER REFERENCES contacts(id) ON DELETE SET NULL,
-   company_id INTEGER REFERENCES companies(id) ON DELETE SET NULL,
-   owner_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+   title VARCHAR(255) NOT NULL,
+   description TEXT,
+   value NUMERIC(15,2),
+   currency VARCHAR(3) DEFAULT 'USD',
+   stage VARCHAR(100) NOT NULL,
+   probability INTEGER DEFAULT 0 CHECK (probability >= 0 AND probability <= 100),
    expected_close_date DATE,
    actual_close_date DATE,
-   deal_source VARCHAR(100),
-   description TEXT,
-   notes TEXT,
-   created_at TIMESTAMP DEFAULT NOW(),
-   updated_at TIMESTAMP DEFAULT NOW(),
-   created_by INTEGER REFERENCES users(id),
-   updated_by INTEGER REFERENCES users(id)
+   owner_id INTEGER,
+   company_id INTEGER,
+   primary_contact_id INTEGER,
+   source VARCHAR(100),
+   close_reason VARCHAR(255),
+   custom_fields JSONB DEFAULT '{}',
+   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+   created_by INTEGER
 );
 
 -- Indexes for performance

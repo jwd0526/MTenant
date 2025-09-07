@@ -1,0 +1,1357 @@
+{
+	"info": {
+		"_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+		"name": "Deal Service API",
+		"description": "Comprehensive API testing collection for the CRM Deal Service with multi-tenant isolation and development mode authentication headers.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "12345678"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Health Check",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time is less than 1000ms\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000);",
+									"});",
+									"",
+									"pm.test(\"Database is healthy\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('healthy', true);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/health",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"health"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Health checks and service verification"
+		},
+		{
+			"name": "Deals CRUD",
+			"item": [
+				{
+					"name": "Create Deal - Minimal",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Deal created with correct data\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.property('title', 'Quick Test Deal');",
+									"    pm.expect(jsonData).to.have.property('stage', 'Lead');",
+									"    pm.expect(jsonData).to.have.property('created_at');",
+									"    ",
+									"    // Store deal ID for subsequent tests",
+									"    pm.globals.set('testDealId', jsonData.id);",
+									"});",
+									"",
+									"pm.test(\"Calculated fields are present\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('deal_age_days');",
+									"    pm.expect(jsonData).to.have.property('weighted_value');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-Tenant-ID",
+								"value": "{{tenantId}}"
+							},
+							{
+								"key": "X-User-ID",
+								"value": "{{userId}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Quick Test Deal\",\n  \"stage\": \"Lead\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/deals",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"deals"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Deal - Complete",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Complete deal created successfully\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.property('title', 'Enterprise Software License');",
+									"    pm.expect(jsonData).to.have.property('value', 250000);",
+									"    pm.expect(jsonData).to.have.property('probability', 75);",
+									"    pm.expect(jsonData).to.have.property('stage', 'Qualified');",
+									"    ",
+									"    // Store deal ID for subsequent tests",
+									"    pm.globals.set('completeDealId', jsonData.id);",
+									"});",
+									"",
+									"pm.test(\"Weighted value calculated correctly\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    const expectedWeighted = 250000 * 75 / 100;",
+									"    pm.expect(jsonData.weighted_value).to.eql(expectedWeighted);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-Tenant-ID",
+								"value": "{{tenantId}}"
+							},
+							{
+								"key": "X-User-ID",
+								"value": "{{userId}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Enterprise Software License\",\n  \"value\": 250000.00,\n  \"probability\": 75.0,\n  \"stage\": \"Qualified\",\n  \"primary_contact_id\": 123,\n  \"company_id\": 456,\n  \"expected_close_date\": \"2024-03-15T00:00:00Z\",\n  \"deal_source\": \"Inbound Lead\",\n  \"description\": \"Multi-year enterprise software license agreement\",\n  \"notes\": \"Customer interested in our premium package\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/deals",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"deals"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Deal by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Deal retrieved successfully\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.property('title');",
+									"    pm.expect(jsonData).to.have.property('stage');",
+									"    pm.expect(jsonData).to.have.property('created_at');",
+									"});",
+									"",
+									"pm.test(\"Calculated fields present\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('deal_age_days');",
+									"    pm.expect(jsonData.deal_age_days).to.be.a('number');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Tenant-ID",
+								"value": "{{tenantId}}"
+							},
+							{
+								"key": "X-User-ID",
+								"value": "{{userId}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/deals/{{completeDealId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"deals",
+								"{{completeDealId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Deal",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Deal updated successfully\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('title', 'Updated Enterprise Software License');",
+									"    pm.expect(jsonData).to.have.property('value', 300000);",
+									"    pm.expect(jsonData).to.have.property('probability', 85);",
+									"    pm.expect(jsonData).to.have.property('stage', 'Proposal');",
+									"});",
+									"",
+									"pm.test(\"Updated timestamp changed\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.updated_at).to.not.equal(jsonData.created_at);",
+									"});",
+									"",
+									"pm.test(\"Weighted value recalculated\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    const expectedWeighted = 300000 * 85 / 100;",
+									"    pm.expect(jsonData.weighted_value).to.eql(expectedWeighted);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-Tenant-ID",
+								"value": "{{tenantId}}"
+							},
+							{
+								"key": "X-User-ID",
+								"value": "{{userId}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Updated Enterprise Software License\",\n  \"value\": 300000.00,\n  \"probability\": 85.0,\n  \"stage\": \"Proposal\",\n  \"expected_close_date\": \"2024-03-20T00:00:00Z\",\n  \"notes\": \"Updated notes with new information\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/deals/{{completeDealId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"deals",
+								"{{completeDealId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Close Deal - Won",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Deal closed successfully\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('stage', 'Closed Won');",
+									"    pm.expect(jsonData).to.have.property('actual_close_date');",
+									"    pm.expect(jsonData.actual_close_date).to.not.be.null;",
+									"});",
+									"",
+									"pm.test(\"Close date is set\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    const closeDate = new Date(jsonData.actual_close_date);",
+									"    pm.expect(closeDate).to.be.a('date');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-Tenant-ID",
+								"value": "{{tenantId}}"
+							},
+							{
+								"key": "X-User-ID",
+								"value": "{{userId}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"stage\": \"Closed Won\",\n  \"actual_close_date\": \"2024-01-30T15:30:00Z\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/deals/{{completeDealId}}/close",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"deals",
+								"{{completeDealId}}",
+								"close"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Deal",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 204\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});",
+									"",
+									"pm.test(\"No response body for successful deletion\", function () {",
+									"    pm.expect(pm.response.text()).to.be.empty;",
+									"});",
+									"",
+									"pm.test(\"Response time is acceptable\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000);",
+									"});",
+									"",
+									"pm.test(\"Deal deletion successful\", function () {",
+									"    // Store the deleted deal ID to verify it's gone",
+									"    pm.globals.set('deletedDealId', pm.globals.get('testDealId'));",
+									"    console.log('Successfully deleted deal ID:', pm.globals.get('testDealId'));",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "X-Tenant-ID",
+								"value": "{{tenantId}}"
+							},
+							{
+								"key": "X-User-ID",
+								"value": "{{userId}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/deals/{{testDealId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"deals",
+								"{{testDealId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Core CRUD operations for deals"
+		},
+		{
+			"name": "Deal Queries",
+			"item": [
+				{
+					"name": "List All Deals",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response structure is correct\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('deals');",
+									"    pm.expect(jsonData).to.have.property('pagination');",
+									"    pm.expect(jsonData.deals).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"Pagination metadata present\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.pagination).to.have.property('page');",
+									"    pm.expect(jsonData.pagination).to.have.property('limit');",
+									"    pm.expect(jsonData.pagination).to.have.property('total_count');",
+									"    pm.expect(jsonData.pagination).to.have.property('total_pages');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Tenant-ID",
+								"value": "{{tenantId}}"
+							},
+							{
+								"key": "X-User-ID",
+								"value": "{{userId}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/deals",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"deals"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Deals with Pagination",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Pagination parameters respected\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.pagination.page).to.eql(1);",
+									"    pm.expect(jsonData.pagination.limit).to.eql(5);",
+									"    pm.expect(jsonData.deals.length).to.be.at.most(5);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Tenant-ID",
+								"value": "{{tenantId}}"
+							},
+							{
+								"key": "X-User-ID",
+								"value": "{{userId}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/deals?page=1&limit=5",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"deals"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "5"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Deals by Stage",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"All deals have correct stage\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    jsonData.deals.forEach(deal => {",
+									"        pm.expect(deal.stage).to.eql('Lead');",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Tenant-ID",
+								"value": "{{tenantId}}"
+							},
+							{
+								"key": "X-User-ID",
+								"value": "{{userId}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/deals?stage=Lead",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"deals"
+							],
+							"query": [
+								{
+									"key": "stage",
+									"value": "Lead"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Deals with Date Filter",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Date filter applied correctly\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    const fromDate = new Date('2024-01-01');",
+									"    const toDate = new Date('2024-12-31');",
+									"    ",
+									"    jsonData.deals.forEach(deal => {",
+									"        if (deal.expected_close_date) {",
+									"            const dealDate = new Date(deal.expected_close_date);",
+									"            pm.expect(dealDate).to.be.at.least(fromDate);",
+									"            pm.expect(dealDate).to.be.at.most(toDate);",
+									"        }",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Tenant-ID",
+								"value": "{{tenantId}}"
+							},
+							{
+								"key": "X-User-ID",
+								"value": "{{userId}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/deals?expected_close_from=2024-01-01&expected_close_to=2024-12-31",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"deals"
+							],
+							"query": [
+								{
+									"key": "expected_close_from",
+									"value": "2024-01-01"
+								},
+								{
+									"key": "expected_close_to",
+									"value": "2024-12-31"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Pipeline View",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Pipeline structure is correct\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('stages');",
+									"    pm.expect(jsonData).to.have.property('totals');",
+									"    pm.expect(jsonData.stages).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"Pipeline totals calculated\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.totals).to.have.property('total_deals');",
+									"    pm.expect(jsonData.totals).to.have.property('total_value');",
+									"    pm.expect(jsonData.totals).to.have.property('total_weighted_value');",
+									"});",
+									"",
+									"pm.test(\"Each stage has correct structure\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    jsonData.stages.forEach(stage => {",
+									"        pm.expect(stage).to.have.property('stage');",
+									"        pm.expect(stage).to.have.property('deal_count');",
+									"        pm.expect(stage).to.have.property('total_value');",
+									"        pm.expect(stage).to.have.property('weighted_value');",
+									"        pm.expect(stage).to.have.property('deals');",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Tenant-ID",
+								"value": "{{tenantId}}"
+							},
+							{
+								"key": "X-User-ID",
+								"value": "{{userId}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/deals/pipeline",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"deals",
+								"pipeline"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Deals by Owner",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an array\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"All deals belong to correct owner\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    jsonData.forEach(deal => {",
+									"        if (deal.owner_id !== null) {",
+									"            pm.expect(deal.owner_id).to.eql(100);",
+									"        }",
+									"    });",
+									"});",
+									"",
+									"pm.test(\"Only open deals returned\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    jsonData.forEach(deal => {",
+									"        pm.expect(deal.actual_close_date).to.be.null;",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Tenant-ID",
+								"value": "{{tenantId}}"
+							},
+							{
+								"key": "X-User-ID",
+								"value": "{{userId}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/deals/owner/100",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"deals",
+								"owner",
+								"100"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Verify Deal Deleted",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"pm.test(\"Deleted deal no longer exists\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('error');",
+									"    console.log('Confirmed deal', pm.globals.get('deletedDealId'), 'is deleted');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Tenant-ID",
+								"value": "{{tenantId}}"
+							},
+							{
+								"key": "X-User-ID",
+								"value": "{{userId}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/deals/{{testDealId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"deals",
+								"{{testDealId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Query operations for deals with filtering and analytics"
+		},
+		{
+			"name": "Error Testing",
+			"item": [
+				{
+					"name": "Create Deal - Invalid Data",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Error response structure\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('error');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-Tenant-ID",
+								"value": "{{tenantId}}"
+							},
+							{
+								"key": "X-User-ID",
+								"value": "{{userId}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"\",\n  \"stage\": \"InvalidStage\",\n  \"probability\": 150\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/deals",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"deals"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Deal - Not Found",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"pm.test(\"Error response structure\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('error');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Tenant-ID",
+								"value": "{{tenantId}}"
+							},
+							{
+								"key": "X-User-ID",
+								"value": "{{userId}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/deals/99999",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"deals",
+								"99999"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Unauthorized Request",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/deals",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"deals"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Invalid JWT Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer invalid-token"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/deals",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"deals"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Deal - Not Found",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"pm.test(\"Error response structure\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('error');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "X-Tenant-ID",
+								"value": "{{tenantId}}"
+							},
+							{
+								"key": "X-User-ID",
+								"value": "{{userId}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/deals/99999",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"deals",
+								"99999"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Deal - Invalid ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Error response structure\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('error');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "X-Tenant-ID",
+								"value": "{{tenantId}}"
+							},
+							{
+								"key": "X-User-ID",
+								"value": "{{userId}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/deals/invalid-id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"deals",
+								"invalid-id"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Error handling and edge case testing"
+		},
+		{
+			"name": "Performance Testing",
+			"item": [
+				{
+					"name": "Bulk Create Deals",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Get current iteration or initialize",
+									"let currentIteration = pm.globals.get('currentIteration') || 0;",
+									"let deals = [];",
+									"",
+									"// Generate deals if first iteration",
+									"if (currentIteration === 0) {",
+									"    for (let i = 1; i <= 10; i++) {",
+									"        deals.push({",
+									"            title: `Performance Test Deal ${i}`,",
+									"            value: Math.floor(Math.random() * 100000) + 10000,",
+									"            probability: Math.floor(Math.random() * 100),",
+									"            stage: ['Lead', 'Qualified', 'Proposal', 'Negotiation'][Math.floor(Math.random() * 4)],",
+									"            deal_source: 'Performance Test',",
+									"            description: `Automated test deal ${i}`",
+									"        });",
+									"    }",
+									"    pm.globals.set('bulkDeals', JSON.stringify(deals));",
+									"    console.log('Generated 10 deals for bulk testing:', deals);",
+									"} else {",
+									"    deals = JSON.parse(pm.globals.get('bulkDeals'));",
+									"}",
+									"",
+									"// Set current deal for this iteration",
+									"if (currentIteration < deals.length) {",
+									"    pm.globals.set('currentDeal', JSON.stringify(deals[currentIteration]));",
+									"    console.log(`Creating deal ${currentIteration + 1}/10:`, deals[currentIteration]);",
+									"} else {",
+									"    // Reset for next run",
+									"    pm.globals.set('currentIteration', 0);",
+									"    pm.execution.setNextRequest(null); // Stop iteration",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Deal created successfully\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Response time acceptable\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(2000);",
+									"});",
+									"",
+									"pm.test(\"Deal has valid structure\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.property('title');",
+									"    pm.expect(jsonData).to.have.property('stage');",
+									"});",
+									"",
+									"// Increment counter and continue to next deal if more remain",
+									"let currentIteration = pm.globals.get('currentIteration') || 0;",
+									"currentIteration++;",
+									"pm.globals.set('currentIteration', currentIteration);",
+									"",
+									"if (currentIteration < 10) {",
+									"    postman.setNextRequest('Bulk Create Deals');",
+									"} else {",
+									"    // Reset counter for next run",
+									"    pm.globals.set('currentIteration', 0);",
+									"    console.log('Bulk creation completed - created 10 deals');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-Tenant-ID",
+								"value": "{{tenantId}}"
+							},
+							{
+								"key": "X-User-ID",
+								"value": "{{userId}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{{currentDeal}}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/deals",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"deals"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Large Pagination Test",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response time under 1 second\", function () {",
+									"    pm.expect(pm.response.responseTime).to.be.below(1000);",
+									"});",
+									"",
+									"pm.test(\"Pagination limit respected\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.deals.length).to.be.at.most(100);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Tenant-ID",
+								"value": "{{tenantId}}"
+							},
+							{
+								"key": "X-User-ID",
+								"value": "{{userId}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/deals?limit=100",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"deals"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "100"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Performance and load testing scenarios"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global pre-request script",
+					"console.log('Running Deal Service API Test:', pm.info.requestName);"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Global test script",
+					"pm.test(\"Response time is reasonable\", function () {",
+					"    pm.expect(pm.response.responseTime).to.be.below(5000);",
+					"});",
+					"",
+					"pm.test(\"No server errors (5xx)\", function () {",
+					"    pm.expect(pm.response.code).to.be.below(500);",
+					"});"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "tenantId",
+			"value": "123e4567-e89b-12d3-a456-426614174000",
+			"type": "string"
+		},
+		{
+			"key": "userId",
+			"value": "123",
+			"type": "string"
+		},
+		{
+			"key": "testDealId",
+			"value": "5203",
+			"type": "string"
+		},
+		{
+			"key": "completeDealId",
+			"value": "5208",
+			"type": "string"
+		}
+	]
+}
