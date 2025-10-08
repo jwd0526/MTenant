@@ -1,4 +1,7 @@
-# Auth Service
+# Auth Service (Planned)
+
+**Last Updated:** 2025-10-08\
+*SQLC setup complete, handlers and business logic pending*
 
 User authentication, authorization, and token management service.
 
@@ -24,13 +27,13 @@ The Auth Service handles user authentication, JWT token management, and role-bas
 **`users`** - User accounts with authentication data
 ```sql
 CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     first_name VARCHAR(100),
     last_name VARCHAR(100),
     role VARCHAR(50) DEFAULT 'user',
-    tenant_id UUID REFERENCES tenants(id),
+    tenant_id TEXT, -- ULID reference to global tenants table
     email_verified BOOLEAN DEFAULT false,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -40,8 +43,8 @@ CREATE TABLE users (
 **`password_reset_tokens`** - Temporary tokens for password recovery
 ```sql
 CREATE TABLE password_reset_tokens (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    id TEXT PRIMARY KEY, -- ULID format (26 chars)
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
     token VARCHAR(255) UNIQUE NOT NULL,
     expires_at TIMESTAMP NOT NULL,
     used BOOLEAN DEFAULT false,

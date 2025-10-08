@@ -1,5 +1,8 @@
 # Deal Service
 
+**Last Updated:** 2025-10-08\
+*Fully implemented with handlers, business logic, and pipeline management*
+
 Sales pipeline and opportunity management service.
 
 ## Overview
@@ -8,16 +11,16 @@ The Deal Service manages sales opportunities through configurable pipeline stage
 
 ## Current Implementation Status
 
-**Status**: SQLC configuration exists but generated code missing
-- ✅ SQLC configuration (`sqlc.yaml`) 
-- ✅ Database schema (`db/schema/`)
-- ✅ SQL queries (`db/queries/`)
-- ❌ Generated code (`internal/db/`) - **Needs `sqlc generate`**
-- ❌ HTTP handlers and business logic (planned)
-- ❌ Pipeline management logic (planned)
-- ❌ Analytics and reporting (planned)
-
-**Next Step**: Run `sqlc generate` in the deal service directory to create the generated database code.
+**Status**: Fully implemented and operational
+- ✅ SQLC configuration and generated code
+- ✅ Database schema and queries
+- ✅ HTTP handlers (`internal/handlers/`)
+- ✅ Business logic layer (`internal/business/`)
+- ✅ Request/response models (`internal/models/`)
+- ✅ Tenant-aware middleware
+- ✅ Pipeline management logic
+- ✅ Deal-contact associations
+- ✅ Integration tests
 
 ## Database Schema
 
@@ -26,7 +29,7 @@ The Deal Service manages sales opportunities through configurable pipeline stage
 **`deals`** - Sales opportunities with stage tracking
 ```sql
 CREATE TABLE deals (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     title VARCHAR(255) NOT NULL,
     description TEXT,
     value DECIMAL(15,2),
@@ -36,16 +39,16 @@ CREATE TABLE deals (
     expected_close_date DATE,
     actual_close_date DATE,
     status VARCHAR(50) DEFAULT 'open', -- open, won, lost
-    company_id UUID, -- Reference to companies table in contact service
-    contact_id UUID, -- Primary contact for the deal
+    company_id INTEGER, -- Reference to companies table
+    contact_id INTEGER, -- Primary contact for the deal
     source VARCHAR(100), -- lead source
     custom_fields JSONB DEFAULT '{}',
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    created_by UUID,
-    updated_by UUID,
-    closed_by UUID,
+    created_by INTEGER,
+    updated_by INTEGER,
+    closed_by INTEGER,
     lost_reason VARCHAR(255)
 );
 ```
@@ -53,9 +56,9 @@ CREATE TABLE deals (
 **`deal_contacts`** - Many-to-many contact associations
 ```sql
 CREATE TABLE deal_contacts (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    deal_id UUID REFERENCES deals(id) ON DELETE CASCADE,
-    contact_id UUID NOT NULL, -- Reference to contacts in contact service
+    id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    deal_id INTEGER REFERENCES deals(id) ON DELETE CASCADE,
+    contact_id INTEGER NOT NULL, -- Reference to contacts table
     role VARCHAR(100), -- decision_maker, influencer, user, etc.
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(deal_id, contact_id)
@@ -65,7 +68,7 @@ CREATE TABLE deal_contacts (
 **`deal_stages`** - Configurable pipeline stages (planned)
 ```sql
 CREATE TABLE deal_stages (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     name VARCHAR(100) NOT NULL,
     order_index INTEGER NOT NULL,
     probability INTEGER DEFAULT 0,

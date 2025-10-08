@@ -1,5 +1,8 @@
 # SQLC Implementation Guide
 
+**Last Updated:** 2025-10-08\
+*Type-safe database access patterns*
+
 Comprehensive documentation for type-safe database access using SQLC across all microservices.
 
 ## Overview

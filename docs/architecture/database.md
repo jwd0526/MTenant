@@ -1,5 +1,8 @@
 # Database Design & Multi-Tenant Architecture
 
+**Last Updated:** 2025-10-08\
+*Multi-tenant schema architecture and data modeling*
+
 Comprehensive documentation of the multi-tenant database architecture, schema isolation, and data modeling.
 
 ## Multi-Tenant Strategy

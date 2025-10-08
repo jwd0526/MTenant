@@ -1,3 +1,8 @@
+# Environment Testing Guide
+
+**Last Updated:** 2025-10-08\
+*Docker environment validation commands*
+
 ## Container Status
 
 ```bash

@@ -1,5 +1,8 @@
 # Activities Table Documentation
 
+**Last Updated:** 2025-10-08\
+*Database schema reference for tenant template*
+
 ## Purpose
 Customer interaction tracking within tenant schemas. Stores all communications, tasks, and activities related to contacts, companies, and deals for complete relationship history and follow-up management.
 

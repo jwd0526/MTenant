@@ -1,5 +1,8 @@
 # Shared Packages Architecture
 
+**Last Updated:** 2025-10-08\
+*Common functionality packages for microservices*
+
 Documentation for the shared packages (`pkg/`) that provide common functionality across all microservices.
 
 ## Overview

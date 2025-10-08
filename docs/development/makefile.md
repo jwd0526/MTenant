@@ -1,5 +1,8 @@
 # Makefile Reference
 
+**Last Updated:** 2025-10-08\
+*Build system and development commands*
+
 Comprehensive guide to the build system and development commands.
 
 ## Overview

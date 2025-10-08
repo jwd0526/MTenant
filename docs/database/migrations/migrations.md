@@ -1,5 +1,8 @@
 # Database Migrations Guide
 
+**Last Updated:** 2025-10-08\
+*golang-migrate setup and usage guide*
+
 Complete guide to database migrations for the multi-tenant CRM platform using golang-migrate.
 
 ## Overview

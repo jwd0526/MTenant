@@ -1,5 +1,8 @@
 # Development Setup
 
+**Last Updated:** 2025-10-08\
+*Local environment setup guide*
+
 Complete guide for setting up the MTenant CRM development environment.
 
 ## Prerequisites

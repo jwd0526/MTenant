@@ -1,4 +1,7 @@
-# Contact Service
+# Contact Service (Planned)
+
+**Last Updated:** 2025-10-08\
+*SQLC setup complete, handlers and business logic pending*
 
 Customer and company data management service.
 
@@ -24,34 +27,34 @@ The Contact Service manages individual contacts and company records with support
 **`contacts`** - Individual contact records
 ```sql
 CREATE TABLE contacts (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     first_name VARCHAR(100),
     last_name VARCHAR(100),
     email VARCHAR(255),
     phone VARCHAR(50),
     title VARCHAR(100),
-    company_id UUID REFERENCES companies(id),
+    company_id INTEGER REFERENCES companies(id),
     status VARCHAR(50) DEFAULT 'active',
     custom_fields JSONB DEFAULT '{}',
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    created_by UUID,
-    updated_by UUID
+    created_by INTEGER,
+    updated_by INTEGER
 );
 ```
 
 **`companies`** - Business entities with hierarchical support
 ```sql
 CREATE TABLE companies (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     name VARCHAR(255) NOT NULL,
     website VARCHAR(255),
     phone VARCHAR(50),
     email VARCHAR(255),
     industry VARCHAR(100),
     size VARCHAR(50),
-    parent_company_id UUID REFERENCES companies(id),
+    parent_company_id INTEGER REFERENCES companies(id),
     address_line1 VARCHAR(255),
     address_line2 VARCHAR(255),
     city VARCHAR(100),
@@ -63,8 +66,8 @@ CREATE TABLE companies (
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    created_by UUID,
-    updated_by UUID
+    created_by INTEGER,
+    updated_by INTEGER
 );
 ```
 
@@ -195,7 +198,7 @@ LOG_LEVEL=info
 ```json
 {
   "filters": {
-    "company_id": "uuid",
+    "company_id": 123,
     "status": ["active", "inactive"],
     "industry": ["technology", "healthcare"],
     "created_date": {

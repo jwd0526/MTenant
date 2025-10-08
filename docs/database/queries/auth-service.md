@@ -1,5 +1,8 @@
 # Auth Service SQL Queries
 
+**Last Updated:** 2025-10-08\
+*SQLC query documentation for auth-service*
+
 Complete documentation of SQL queries used by the Auth Service for user authentication and management.
 
 ## Overview

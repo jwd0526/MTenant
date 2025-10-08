@@ -1,5 +1,8 @@
 # Companies Table Documentation
 
+**Last Updated:** 2025-10-08\
+*Database schema reference for tenant template*
+
 ## Purpose
 Business entity management within tenant schemas. Stores company information, organizational hierarchy, and business metrics for contact association and account-based selling.
 

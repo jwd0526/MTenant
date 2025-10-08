@@ -1,5 +1,8 @@
 # Users Table Documentation
 
+**Last Updated:** 2025-10-08\
+*Database schema reference for tenant template*
+
 ## Purpose
 Template user table for tenant-specific schemas. Manages user authentication, authorization, and profile data within each isolated tenant environment.
 

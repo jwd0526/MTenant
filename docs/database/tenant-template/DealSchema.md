@@ -1,6 +1,9 @@
 ```markdown
 # Deals Table Documentation
 
+**Last Updated:** 2025-10-08\
+*Database schema reference for tenant template*
+
 ## Purpose
 Sales opportunity management within tenant schemas. Stores deal information, pipeline progression, and sales forecasting data for tracking revenue opportunities through the sales process.
 

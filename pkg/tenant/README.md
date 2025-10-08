@@ -1,5 +1,8 @@
 # Tenant Package
 
+**Last Updated:** 2025-10-08\
+*Initial documentation with complete implementation verification*
+
 A comprehensive multi-tenancy implementation for PostgreSQL using schema-per-tenant isolation. This package provides complete tenant isolation while maintaining high performance and security.
 
 ## 🏗️ Architecture Overview
@@ -29,7 +32,7 @@ Manages tenant information in Go contexts with proper validation.
 
 ```go
 // Create tenant-aware context
-ctx, err := tenant.NewContext(ctx, "12345678-1234-1234-1234-123456789012")
+ctx, err := tenant.NewContext(ctx, "01HK153X003BMPJNJB6JHKXK8T")
 if err != nil {
     return err
 }
@@ -47,7 +50,7 @@ if !tenant.HasTenant(ctx) {
 ```
 
 **Features:**
-- UUID validation for tenant IDs
+- ULID validation for tenant IDs
 - Type-safe context key management
 - Panic-safe tenant extraction with `MustFromContext`
 
@@ -144,7 +147,7 @@ func main() {
     tenantPool := tenant.NewTenantPool(pool)
     
     // 3. Create tenant context
-    ctx, err := tenant.NewContext(context.Background(), "12345678-1234-1234-1234-123456789012")
+    ctx, err := tenant.NewContext(context.Background(), "01HK153X003BMPJNJB6JHKXK8T")
     if err != nil {
         log.Fatal(err)
     }
@@ -215,18 +218,22 @@ func CreateTenant(ctx context.Context, pool *database.Pool, tenantID string) err
 ### 1. Tenant ID Validation
 
 ```go
-// Only valid UUIDs are accepted as tenant IDs
-var uuidPattern = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)
-
+// Only valid ULIDs are accepted as tenant IDs
+// ULID format: 26 characters, case-insensitive alphanumeric
 func validateID(id string) error {
     if id == "" {
         return ErrBlankTenantID
     }
-    
-    if !uuidPattern.MatchString(id) {
-        return ErrInvalidTenantID
+
+    if len(id) != 26 {
+        return fmt.Errorf("%w: expected 26 characters, got %d", ErrInvalidTenantID, len(id))
     }
-    
+
+    _, err := ulid.Parse(id)
+    if err != nil {
+        return fmt.Errorf("%w: %v", ErrInvalidTenantID, err)
+    }
+
     return nil
 }
 ```
@@ -326,7 +333,7 @@ func CleanupTestTenant(t *testing.T, pool *database.Pool, tenantID string) {
 var (
     ErrTenantNotFound      = fmt.Errorf("context does not contain tenant key")
     ErrBlankTenantID       = fmt.Errorf("tenant ID cannot be blank")
-    ErrInvalidTenantID     = fmt.Errorf("tenant ID must be a valid UUID")
+    ErrInvalidTenantID     = fmt.Errorf("tenant ID must be a valid ULID")
     ErrSchemaNotFound      = fmt.Errorf("schema does not exist")
     ErrInvalidSchema       = fmt.Errorf("schema name invalid")
     ErrFailedTransaction   = fmt.Errorf("failed to begin transaction")
@@ -497,7 +504,7 @@ config.LogLevel = pgxpool.LogLevelDebug
 -- Verify search path is set correctly
 SHOW search_path;
 
--- Should return: "tenant_<uuid>", public
+-- Should return: "tenant_<ulid>", public
 ```
 
 ### Verify Schema Exists

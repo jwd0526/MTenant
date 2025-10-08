@@ -1,5 +1,8 @@
 # Contacts Table Documentation
 
+**Last Updated:** 2025-10-08\
+*Database schema reference for tenant template*
+
 ## Purpose
 Customer and prospect data management within tenant schemas. Stores contact information, company associations, and custom fields for CRM sales activities.
 

@@ -1,0 +1,154 @@
+name: Update Documentation Metadata
+
+on:
+  push:
+    branches:
+      - '**'
+    paths:
+      - '**/*.md'
+
+jobs:
+  update-doc-dates:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # Need previous commit for comparison
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update documentation dates
+        id: update
+        run: |
+          # Get list of modified/created markdown files
+          CHANGED_FILES=$(git diff --name-only --diff-filter=AM HEAD~1 HEAD | grep '\.md$' || true)
+
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "No markdown files changed"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "Changed markdown files:"
+          echo "$CHANGED_FILES"
+
+          # Get current date in YYYY-MM-DD format
+          CURRENT_DATE=$(date +%Y-%m-%d)
+
+          # Track if we made any changes
+          FILES_UPDATED=0
+          WARNINGS=""
+
+          # Process each changed markdown file
+          while IFS= read -r file; do
+            if [ ! -f "$file" ]; then
+              continue
+            fi
+
+            echo "Processing: $file"
+
+            # Check if file has the Last Updated metadata
+            if grep -q "^\*\*Last Updated:\*\*" "$file"; then
+              # File has metadata - update the date
+              OLD_DATE=$(grep "^\*\*Last Updated:\*\*" "$file" | sed 's/\*\*Last Updated:\*\* //' | tr -d '\r')
+
+              if [ "$OLD_DATE" != "$CURRENT_DATE" ]; then
+                # Update the date
+                if [[ "$OSTYPE" == "darwin"* ]]; then
+                  sed -i '' "s/^\*\*Last Updated:\*\* .*$/\*\*Last Updated:\*\* $CURRENT_DATE/" "$file"
+                else
+                  sed -i "s/^\*\*Last Updated:\*\* .*$/\*\*Last Updated:\*\* $CURRENT_DATE/" "$file"
+                fi
+
+                # Get the description (line right after Last Updated)
+                CURRENT_DESC=$(grep -A 1 "^\*\*Last Updated:\*\*" "$file" | tail -1 | tr -d '\r')
+
+                # Try to get previous description from last commit
+                if git show HEAD~1:"$file" 2>/dev/null | grep -q "^\*\*Last Updated:\*\*"; then
+                  PREV_DESC=$(git show HEAD~1:"$file" | grep -A 1 "^\*\*Last Updated:\*\*" | tail -1 | tr -d '\r')
+
+                  if [ "$CURRENT_DESC" = "$PREV_DESC" ]; then
+                    WARNINGS="${WARNINGS}⚠️  $file - Description unchanged: $CURRENT_DESC\n"
+                  fi
+                fi
+
+                FILES_UPDATED=$((FILES_UPDATED + 1))
+                echo "  ✅ Updated date from $OLD_DATE to $CURRENT_DATE"
+              else
+                echo "  ℹ️  Date already current"
+              fi
+            else
+              # File doesn't have metadata - add it after the title
+              # Check if this is a new file (doesn't exist in previous commit)
+              if ! git show HEAD~1:"$file" >/dev/null 2>&1; then
+                # New file - add Initial doc metadata
+                echo "  📝 Adding initial metadata (new file)"
+
+                # Find the title line (first # line)
+                TITLE_LINE=$(grep -n "^#" "$file" | head -1 | cut -d: -f1)
+
+                if [ -n "$TITLE_LINE" ]; then
+                  # Insert metadata after title
+                  {
+                    head -n "$TITLE_LINE" "$file"
+                    echo ""
+                    echo "**Last Updated:** $CURRENT_DATE"
+                    echo "*Initial doc*"
+                    tail -n +"$((TITLE_LINE + 1))" "$file"
+                  } > "${file}.tmp"
+                  mv "${file}.tmp" "$file"
+
+                  FILES_UPDATED=$((FILES_UPDATED + 1))
+                fi
+              else
+                echo "  ⚠️  No metadata found but file exists - skipping"
+              fi
+            fi
+          done <<< "$CHANGED_FILES"
+
+          # Output results
+          echo ""
+          echo "========================================="
+          echo "Documentation Update Summary"
+          echo "========================================="
+          echo "Files updated: $FILES_UPDATED"
+
+          if [ -n "$WARNINGS" ]; then
+            echo ""
+            echo "Warnings (descriptions not updated):"
+            echo -e "$WARNINGS"
+          fi
+
+          # Check if we have changes to commit
+          if git diff --quiet; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "warnings<<EOF" >> $GITHUB_OUTPUT
+            echo -e "$WARNINGS" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit changes
+        if: steps.update.outputs.has_changes == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Stage the changes
+          git add **/*.md
+
+          # Amend the previous commit
+          git commit --amend --no-edit
+
+          # Force push (amending the commit)
+          git push --force-with-lease
+
+      - name: Post warnings
+        if: steps.update.outputs.has_changes == 'true' && steps.update.outputs.warnings != ''
+        run: |
+          echo "::warning::Some documentation files have unchanged descriptions. Please review:"
+          echo "${{ steps.update.outputs.warnings }}"

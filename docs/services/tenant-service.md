@@ -1,4 +1,7 @@
-# Tenant Service
+# Tenant Service (Planned)
+
+**Last Updated:** 2025-10-08\
+*Service structure exists with SQLC queries, handlers/services need implementation*
 
 Multi-tenant organization management and schema provisioning service.
 
@@ -24,7 +27,7 @@ The Tenant Service manages organization registration, dynamic schema creation fo
 **`tenants`** - Organization registry (global table)
 ```sql
 CREATE TABLE tenants (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id TEXT PRIMARY KEY, -- ULID format (26 chars)
     name VARCHAR(255) NOT NULL,
     subdomain VARCHAR(100) UNIQUE NOT NULL,
     status VARCHAR(50) DEFAULT 'active',
@@ -38,11 +41,11 @@ CREATE TABLE tenants (
 **`invitations`** - Cross-tenant invitation system
 ```sql
 CREATE TABLE invitations (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    tenant_id UUID REFERENCES tenants(id) ON DELETE CASCADE,
+    id TEXT PRIMARY KEY, -- ULID format (26 chars)
+    tenant_id TEXT REFERENCES tenants(id) ON DELETE CASCADE,
     email VARCHAR(255) NOT NULL,
     role VARCHAR(50) DEFAULT 'user',
-    invited_by UUID REFERENCES users(id),
+    invited_by INTEGER, -- References users table in tenant schema
     token VARCHAR(255) UNIQUE NOT NULL,
     status VARCHAR(50) DEFAULT 'pending',
     expires_at TIMESTAMP NOT NULL,

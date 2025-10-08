@@ -1,5 +1,8 @@
 # Tenants Table Documentation
 
+**Last Updated:** 2025-10-08\
+*Global tenants table schema documentation*
+
 ## Purpose
 
 Core registry table for multi-tenant CRM architecture. Maps organization subdomains to isolated database schemas.

@@ -1,4 +1,7 @@
-# Communication Service
+# Communication Service (Planned)
+
+**Last Updated:** 2025-10-08\
+*Not yet implemented, requires SQLC setup and handlers*
 
 Customer interaction tracking and communication workflows service.
 
@@ -26,13 +29,13 @@ The Communication Service manages all customer interactions including activity l
 **`activities`** - All customer interactions
 ```sql
 CREATE TABLE activities (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     type VARCHAR(50) NOT NULL, -- email, call, meeting, note, task
     subject VARCHAR(255),
     description TEXT,
-    contact_id UUID, -- Reference to contacts in contact service
-    deal_id UUID, -- Reference to deals in deal service
-    company_id UUID, -- Reference to companies in contact service
+    contact_id INTEGER, -- Reference to contacts table
+    deal_id INTEGER, -- Reference to deals table
+    company_id INTEGER, -- Reference to companies table
     status VARCHAR(50) DEFAULT 'completed', -- completed, scheduled, cancelled
     direction VARCHAR(20), -- inbound, outbound
     duration_minutes INTEGER, -- for calls and meetings
@@ -44,15 +47,15 @@ CREATE TABLE activities (
     custom_fields JSONB DEFAULT '{}',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    created_by UUID,
-    updated_by UUID
+    created_by INTEGER,
+    updated_by INTEGER
 );
 ```
 
 **`email_templates`** - Communication templates
 ```sql
 CREATE TABLE email_templates (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     name VARCHAR(255) NOT NULL,
     subject VARCHAR(255) NOT NULL,
     body_html TEXT NOT NULL,
@@ -62,17 +65,17 @@ CREATE TABLE email_templates (
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    created_by UUID
+    created_by INTEGER
 );
 ```
 
 **`email_tracking`** - Email delivery and engagement metrics
 ```sql
 CREATE TABLE email_tracking (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    activity_id UUID REFERENCES activities(id) ON DELETE CASCADE,
+    id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    activity_id INTEGER REFERENCES activities(id) ON DELETE CASCADE,
     email_address VARCHAR(255) NOT NULL,
-    template_id UUID REFERENCES email_templates(id),
+    template_id INTEGER REFERENCES email_templates(id),
     message_id VARCHAR(255) UNIQUE, -- External email service message ID
     status VARCHAR(50) DEFAULT 'sent', -- sent, delivered, bounced, failed
     sent_at TIMESTAMP,
@@ -90,7 +93,7 @@ CREATE TABLE email_tracking (
 **`tasks`** - Task and reminder management
 ```sql
 CREATE TABLE tasks (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
     title VARCHAR(255) NOT NULL,
     description TEXT,
     type VARCHAR(50) DEFAULT 'task', -- task, reminder, follow_up
@@ -98,15 +101,15 @@ CREATE TABLE tasks (
     priority VARCHAR(20) DEFAULT 'normal', -- low, normal, high, urgent
     due_date TIMESTAMP,
     reminder_at TIMESTAMP,
-    contact_id UUID, -- Reference to contacts in contact service
-    deal_id UUID, -- Reference to deals in deal service
-    assigned_to UUID, -- User ID
+    contact_id INTEGER, -- Reference to contacts table
+    deal_id INTEGER, -- Reference to deals table
+    assigned_to INTEGER, -- User ID
     completed_at TIMESTAMP,
     custom_fields JSONB DEFAULT '{}',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    created_by UUID,
-    completed_by UUID
+    created_by INTEGER,
+    completed_by INTEGER
 );
 ```
 

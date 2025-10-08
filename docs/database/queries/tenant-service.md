@@ -1,5 +1,8 @@
 # Tenant Service SQL Queries
 
+**Last Updated:** 2025-10-08\
+*SQLC query documentation for tenant-service*
+
 Complete documentation of SQL queries used by the Tenant Service for organization management and user invitations.
 
 ## Overview

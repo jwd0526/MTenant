@@ -1,5 +1,8 @@
 # Contact Service SQL Queries
 
+**Last Updated:** 2025-10-08\
+*SQLC query documentation for contact-service*
+
 Comprehensive documentation of SQL queries used by the Contact Service for managing contacts and companies.
 
 ## Overview
