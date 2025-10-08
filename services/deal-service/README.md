@@ -3,7 +3,7 @@
 **Last Updated:** 2025-10-08\
 *Production-ready implementation*
 
-This is a standalone version of the MTenant project. A multi-tenant CRM deal management service built with Go, PostgreSQL. In the monorepo for this project, the [database package](./database/README.md) and [tenant aware database package](./tenant/README.md) will be in the project root, and this service along with others will be built before run.
+Deal managing service for the MTenant CRM.
 
 ## 🏗️ Architecture
 

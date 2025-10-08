@@ -1,10 +1,10 @@
 package helpers
 
-// Predefined test tenant IDs - these must be created by ../../scripts/setup_test_tenants.go script
+// Predefined test tenant ULIDs - these must be created by ../../scripts/setup_test_tenants.go script
 const (
-	TestTenant1 = "123e4567-e89b-12d3-a456-426614174000"
-	TestTenant2 = "456e7890-e89b-12d3-a456-426614174111"  
-	TestTenant3 = "789e0123-e89b-12d3-a456-426614174222"
+	TestTenant1 = "01HK153X003BMPJNJB6JHKXK8T"
+	TestTenant2 = "01HK3QGM00Y1FYD4HXDQKHGW4S"  
+	TestTenant3 = "01HK69XB00FMWEYR0NBGS5JNS1"
 )
 
 // GetTestTenants returns the available test tenant IDs

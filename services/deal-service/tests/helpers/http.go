@@ -12,7 +12,7 @@ import (
 	"testing"
 
 	"crm-platform/deal-service/internal/handlers"
-	"crm-platform/deal-service/internal/middleware"
+	"crm-platform/pkg/middleware"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"

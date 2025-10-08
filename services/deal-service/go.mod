@@ -4,7 +4,6 @@ go 1.24.3
 
 require (
 	github.com/gin-gonic/gin v1.10.1
-	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/jackc/pgx/v5 v5.7.5
 	github.com/stretchr/testify v1.10.0
 )

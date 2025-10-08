@@ -9,7 +9,7 @@ import (
 	"crm-platform/pkg/database"
 	"crm-platform/deal-service/internal/errors"
 	"crm-platform/deal-service/internal/handlers"
-	"crm-platform/deal-service/internal/middleware"
+	"crm-platform/pkg/middleware"
 
 	"github.com/gin-gonic/gin"
 )
