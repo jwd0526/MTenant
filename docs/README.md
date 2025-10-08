@@ -1,7 +1,7 @@
 # MTenant CRM Documentation
 
-**Last Updated:** 2025-10-08\
-*Main documentation index*
+**Last Updated:** 2025-10-02\
+*Remove unused paths*
 
 This directory contains comprehensive documentation for the multi-tenant CRM platform.
 
@@ -21,8 +21,7 @@ This directory contains comprehensive documentation for the multi-tenant CRM pla
 ### Database Schemas
 - [Global Schemas](./database/global/) - Tenant registry and system tables
 - [Tenant Templates](./database/tenant-template/) - Schema templates for tenant isolation
-- [Database Migrations](./database/migrations.md) - Migration strategy and golang-migrate guide
-- [Query Documentation](./database/queries/) - SQL query documentation by service
+- [Database Migrations](./database/migrations/) - Migration strategy and golang-migrate guide
 
 ### Services
 - [Auth Service](./services/auth-service.md) - Authentication and user management
@@ -30,11 +29,6 @@ This directory contains comprehensive documentation for the multi-tenant CRM pla
 - [Contact Service](./services/contact-service.md) - Contact and company management
 - [Deal Service](./services/deal-service.md) - Sales pipeline management
 - [Communication Service](./services/communication-service.md) - Activity tracking
-
-### Operations
-- [Deployment](./operations/deployment.md) - Kubernetes and container deployment
-- [Monitoring](./operations/monitoring.md) - Observability and alerting
-- [Security](./operations/security.md) - Security considerations and compliance
 
 ## Quick Start
 
