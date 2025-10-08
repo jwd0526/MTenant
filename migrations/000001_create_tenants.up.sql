@@ -1,6 +1,6 @@
 -- Create tenants table for multi-tenant registry
 CREATE TABLE tenants (
-    id SERIAL PRIMARY KEY,
+    id TEXT PRIMARY KEY, -- ULID format (26 chars)
     name VARCHAR(255) NOT NULL,
     subdomain VARCHAR(63) UNIQUE NOT NULL,
     schema_name VARCHAR(63) UNIQUE NOT NULL,
@@ -20,5 +20,5 @@ CREATE INDEX idx_tenants_schema_name ON tenants(schema_name);
 CREATE INDEX idx_tenants_status ON tenants(status);
 
 -- Insert default system tenant for testing
-INSERT INTO tenants (name, subdomain, schema_name) 
-VALUES ('System Admin', 'admin', 'tenant_admin');
+INSERT INTO tenants (id, name, subdomain, schema_name) 
+VALUES ('01HK153X003BMPJNJB6JHKXK8T', 'System Admin', 'admin', 'tenant_admin');

@@ -27,7 +27,7 @@ var (
     ErrSeedDataFailure      = fmt.Errorf("failed to copy seed data")
 )
 
-// Schema name validation regex - PostgreSQL identifier rules (allow hyphens for UUIDs)
+// Schema name validation regex - PostgreSQL identifier rules (allow hyphens for ULIDs)
 var schemaNamePattern = regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_-]*$`)
 
 // GenerateSchemaName converts tenant ID to PostgreSQL schema name

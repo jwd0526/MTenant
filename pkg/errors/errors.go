@@ -39,7 +39,12 @@ var (
 		return fmt.Errorf("BUSINESS ERROR: %s", msg)
 	}
 
-	// Handler process errors  
+	// Deal business logic errors
+	ErrDeal = func(msg string) error {
+		return fmt.Errorf("DEAL ERROR: %s", msg)
+	}
+
+	// Handler process errors
 	ErrHandler = func(msg string) error {
 		return fmt.Errorf("HANDLER ERROR: %s", msg)
 	}

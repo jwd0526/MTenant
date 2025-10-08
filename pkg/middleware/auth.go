@@ -68,7 +68,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			// Get tenant from header (allows dynamic tenant in dev/test)
 			tenantID := c.GetHeader("X-Tenant-ID")
 			if tenantID == "" {
-				tenantID = "123e4567-e89b-12d3-a456-426614174000" // fallback
+				tenantID = "01HK153X003BMPJNJB6JHKXK8T" // fallback
 			}
 			
 			userID := c.GetHeader("X-User-ID")

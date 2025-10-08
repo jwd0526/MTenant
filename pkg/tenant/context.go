@@ -3,15 +3,15 @@ package tenant
 import (
     "context"
     "fmt"
-    "regexp"
+    
+    "github.com/oklog/ulid/v2"
 )
 
 type contextKey string
 
 var tenantKey contextKey = "tenantIDKey"
 
-// UUID regex pattern for validation
-var uuidPattern = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)
+// ULID validation using oklog/ulid library
 
 // Context error definitions
 var (
@@ -19,7 +19,7 @@ var (
     ErrInvalidTenantType = fmt.Errorf("tenant key must be string")
     ErrNilContext        = fmt.Errorf("cannot extract from nil context")
     ErrBlankTenantID     = fmt.Errorf("tenant ID cannot be blank")
-    ErrInvalidTenantID   = fmt.Errorf("invalid tenant ID format")
+    ErrInvalidTenantID   = fmt.Errorf("invalid ULID format")
 )
 
 // NewContext creates a new context with tenant ID stored
@@ -67,18 +67,19 @@ func MustFromContext(ctx context.Context) string {
     return tenantID
 }
 
-// validateID validates tenant ID format (UUID)
+// validateID validates tenant ID format (ULID)
 func validateID(id string) error {
     if id == "" {
         return ErrBlankTenantID
     }
 
-    if len(id) != 36 {
-        return fmt.Errorf("%w: expected 36 characters, got %d", ErrInvalidTenantID, len(id))
+    if len(id) != 26 {
+        return fmt.Errorf("%w: expected 26 characters, got %d", ErrInvalidTenantID, len(id))
     }
 
-    if !uuidPattern.MatchString(id) {
-        return fmt.Errorf("%w: must be valid UUID", ErrInvalidTenantID)
+    _, err := ulid.Parse(id)
+    if err != nil {
+        return fmt.Errorf("%w: %v", ErrInvalidTenantID, err)
     }
 
     return nil
