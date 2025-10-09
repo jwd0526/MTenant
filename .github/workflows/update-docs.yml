@@ -53,14 +53,14 @@ jobs:
             # Check if file has the Last Updated metadata
             if grep -q "^\*\*Last Updated:\*\*" "$file"; then
               # File has metadata - update the date
-              OLD_DATE=$(grep "^\*\*Last Updated:\*\*" "$file" | sed 's/\*\*Last Updated:\*\* //' | tr -d '\r')
+              OLD_DATE=$(grep "^\*\*Last Updated:\*\*" "$file" | sed 's/\*\*Last Updated:\*\* //' | sed 's/\\$//' | tr -d '\r')
 
               if [ "$OLD_DATE" != "$CURRENT_DATE" ]; then
-                # Update the date
+                # Update the date with backslash for line continuation
                 if [[ "$OSTYPE" == "darwin"* ]]; then
-                  sed -i '' "s/^\*\*Last Updated:\*\* .*$/\*\*Last Updated:\*\* $CURRENT_DATE/" "$file"
+                  sed -i '' "s/^\*\*Last Updated:\*\* .*$/\*\*Last Updated:\*\* $CURRENT_DATE\\\\/" "$file"
                 else
-                  sed -i "s/^\*\*Last Updated:\*\* .*$/\*\*Last Updated:\*\* $CURRENT_DATE/" "$file"
+                  sed -i "s/^\*\*Last Updated:\*\* .*$/\*\*Last Updated:\*\* $CURRENT_DATE\\\\/" "$file"
                 fi
 
                 # Get the description (line right after Last Updated)
@@ -91,11 +91,11 @@ jobs:
                 TITLE_LINE=$(grep -n "^#" "$file" | head -1 | cut -d: -f1)
 
                 if [ -n "$TITLE_LINE" ]; then
-                  # Insert metadata after title
+                  # Insert metadata after title with backslash for line continuation
                   {
                     head -n "$TITLE_LINE" "$file"
                     echo ""
-                    echo "**Last Updated:** $CURRENT_DATE"
+                    echo "**Last Updated:** $CURRENT_DATE\\"
                     echo "*Initial doc*"
                     tail -n +"$((TITLE_LINE + 1))" "$file"
                   } > "${file}.tmp"
@@ -135,13 +135,17 @@ jobs:
       - name: Commit changes
         if: steps.update.outputs.has_changes == 'true'
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Get original commit author information
+          AUTHOR_NAME=$(git log -1 --format='%an')
+          AUTHOR_EMAIL=$(git log -1 --format='%ae')
 
-          # Stage the changes
-          git add **/*.md
+          git config user.name "$AUTHOR_NAME"
+          git config user.email "$AUTHOR_EMAIL"
 
-          # Amend the previous commit
+          # Stage all modified markdown files
+          git add -u '*.md'
+
+          # Amend the previous commit (preserving original author)
           git commit --amend --no-edit
 
           # Force push (amending the commit)
