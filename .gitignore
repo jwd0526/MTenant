@@ -5,3 +5,7 @@
 /EngPlan*.txt
 /.env
 /*/*-old
+
+# macOS system files
+.DS_Store
+**/.DS_Store
