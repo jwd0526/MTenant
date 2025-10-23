@@ -1,7 +1,7 @@
 # Database Package
 
-**Last Updated:** 2025-10-08\
-*Initial documentation with complete implementation verification*
+**Last Updated:** 2025-10-23\
+*Added automatic metrics tracking integration for all database operations*
 
 A high-performance PostgreSQL connection pooling and management package built on pgx v5. This package provides robust database connectivity, health monitoring, metrics collection, and production-ready features.
 
@@ -27,6 +27,13 @@ database/
 ```
 
 ## 🔧 Core Components
+
+**Important: Metrics-Enabled Methods**
+
+The `Pool` type embeds `*pgxpool.Pool` but provides wrapper methods for common operations that automatically track metrics:
+- Use `pool.Query()`, `pool.QueryRow()`, `pool.Exec()` for automatic metrics tracking
+- For advanced operations (transactions, batches, etc.), use `pool.Pool.Begin()`, `pool.Pool.SendBatch()` directly
+- All wrapper methods are compatible with the underlying pgx interfaces
 
 ### 1. Configuration Management (`config.go`)
 
@@ -158,23 +165,35 @@ type PoolStats struct {
 
 ### 4. Metrics Collection (`metrics.go`)
 
-Thread-safe metrics collection for monitoring database performance.
+Thread-safe metrics collection for monitoring database performance with automatic tracking.
 
 ```go
-// Access pool metrics
+// Metrics are automatically collected during operations
+// Access pool metrics at any time
 metrics := pool.GetMetrics()
 
 log.Printf("Total queries: %d", metrics.TotalQueries)
 log.Printf("Failed queries: %d", metrics.FailedQueries)
-log.Printf("Average query duration: %v", time.Duration(metrics.QueryDuration/metrics.TotalQueries))
+if metrics.TotalQueries > 0 {
+    avgDuration := time.Duration(metrics.QueryDuration / metrics.TotalQueries)
+    log.Printf("Average query duration: %v", avgDuration)
+}
 log.Printf("Active connections: %d", metrics.ActiveConnections)
 ```
 
 **Collected Metrics:**
-- **Connection Metrics**: Total, failed, and active connection counts
-- **Query Performance**: Query counts, failures, and execution times
-- **Health Check Status**: Health check frequency and failure rates
+- **Connection Metrics**: Total, failed, and active connection counts (tracked during pool creation)
+- **Query Performance**: Query counts, failures, and execution times (tracked via wrapper methods)
+- **Health Check Status**: Health check frequency and failure rates (tracked during health checks)
 - **Timestamps**: Last health check and operation times
+
+**Automatic Metrics Tracking:**
+The Pool provides wrapper methods that automatically track metrics:
+- `pool.Query()` - Tracks query count, duration, and failures
+- `pool.QueryRow()` - Tracks query count and duration
+- `pool.Exec()` - Tracks execution count, duration, and failures
+- `pool.HealthCheck()` - Tracks health check count and failures
+- Connection attempts are tracked during `NewPool()`
 
 **Metrics Structure:**
 ```go
@@ -201,6 +220,7 @@ package main
 import (
     "context"
     "log"
+    "time"
     "crm-platform/deal-service/database"
 )
 
@@ -210,32 +230,32 @@ func main() {
     if err != nil {
         log.Fatalf("Failed to load database config: %v", err)
     }
-    
+
     // 2. Create database pool with retry logic
     ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
     defer cancel()
-    
+
     pool, err := database.NewPool(ctx, config)
     if err != nil {
         log.Fatalf("Failed to create database pool: %v", err)
     }
     defer pool.Close()
-    
+
     // 3. Verify database health
     health := pool.HealthCheck(context.Background())
     if !health.Healthy {
         log.Fatalf("Database health check failed: %s", health.Error)
     }
-    
+
     log.Printf("Database connected successfully - Response time: %v", health.ResponseTime)
-    
-    // 4. Use pool for database operations
+
+    // 4. Use pool for database operations (with automatic metrics tracking)
     rows, err := pool.Query(context.Background(), "SELECT version()")
     if err != nil {
         log.Fatalf("Query failed: %v", err)
     }
     defer rows.Close()
-    
+
     for rows.Next() {
         var version string
         if err := rows.Scan(&version); err != nil {
@@ -243,6 +263,10 @@ func main() {
         }
         log.Printf("PostgreSQL version: %s", version)
     }
+
+    // 5. Check metrics
+    metrics := pool.GetMetrics()
+    log.Printf("Total queries executed: %d", metrics.TotalQueries)
 }
 ```
 

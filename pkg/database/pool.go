@@ -6,6 +6,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -43,20 +45,27 @@ func NewPool(ctx context.Context, config *Config) (*Pool, error) {
 	pgxConfig.MaxConnIdleTime = config.MaxConnIdleTime
 	pgxConfig.ConnConfig.ConnectTimeout = config.ConnectTimeout
 
+	// Initialize metrics before attempting connection
+	metrics := NewMetrics()
+
 	// Create pool with retry logic
 	var pool *pgxpool.Pool
 	for i := 0; i <= config.MaxRetries; i++ {
+		metrics.IncrementConnections()
 		pool, err = pgxpool.NewWithConfig(ctx, pgxConfig)
 		if err == nil {
 			err = pool.Ping(ctx)
 			if err != nil {
 				pool.Close()
+				metrics.IncrementFailedConnections()
 			} else {
 				break
 			}
+		} else {
+			metrics.IncrementFailedConnections()
 		}
 		if i < config.MaxRetries { // Don't sleep after last attempt
-			log.Printf("Connection attempt %d failed: %v. Retrying in %v...\n", 
+			log.Printf("Connection attempt %d failed: %v. Retrying in %v...\n",
 				i+1, err, config.RetryInterval)
 			time.Sleep(config.RetryInterval)
 		} else {
@@ -66,12 +75,15 @@ func NewPool(ctx context.Context, config *Config) (*Pool, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%w after %d attempts: %v", ErrConnectionFailed, config.MaxRetries+1, err)
 	}
-	
+
 	customPool := &Pool{
 		Pool:    pool,           // Embed the pgxpool.Pool
 		config:  config,         // Store the config
-		metrics: NewMetrics(),	 // Initialize pool metrics
+		metrics: metrics,	 	 // Initialize pool metrics
 	}
+
+	// Update active connections count
+	customPool.updateActiveConnections()
 
 	return customPool, nil
 }
@@ -87,4 +99,63 @@ func (p *Pool) Close() {
 // Stats returns connection pool statistics
 func (p *Pool) Stats() *pgxpool.Stat {
 	return p.Pool.Stat()
+}
+
+// GetMetrics returns a copy of the current metrics
+func (p *Pool) GetMetrics() Metrics {
+	return p.metrics.GetMetrics()
+}
+
+// updateActiveConnections updates the active connections metric from pool stats
+func (p *Pool) updateActiveConnections() {
+	stats := p.Pool.Stat()
+	p.metrics.SetActiveConnections(int64(stats.AcquiredConns()))
+}
+
+// Query wraps pgxpool.Pool.Query with metrics tracking
+func (p *Pool) Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error) {
+	start := time.Now()
+	p.metrics.IncrementQueries()
+
+	rows, err := p.Pool.Query(ctx, sql, args...)
+	duration := time.Since(start)
+	p.metrics.AddQueryDuration(duration)
+
+	if err != nil {
+		p.metrics.IncrementFailedQueries()
+		return nil, err
+	}
+
+	return rows, nil
+}
+
+// QueryRow wraps pgxpool.Pool.QueryRow with metrics tracking
+func (p *Pool) QueryRow(ctx context.Context, sql string, args ...any) pgx.Row {
+	start := time.Now()
+	p.metrics.IncrementQueries()
+
+	row := p.Pool.QueryRow(ctx, sql, args...)
+	duration := time.Since(start)
+	p.metrics.AddQueryDuration(duration)
+
+	// Note: pgx.Row doesn't return errors until Scan() is called
+	// We can't track failures here, but we track the query attempt
+	return row
+}
+
+// Exec wraps pgxpool.Pool.Exec with metrics tracking
+func (p *Pool) Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error) {
+	start := time.Now()
+	p.metrics.IncrementQueries()
+
+	tag, err := p.Pool.Exec(ctx, sql, args...)
+	duration := time.Since(start)
+	p.metrics.AddQueryDuration(duration)
+
+	if err != nil {
+		p.metrics.IncrementFailedQueries()
+		return tag, err
+	}
+
+	return tag, nil
 }

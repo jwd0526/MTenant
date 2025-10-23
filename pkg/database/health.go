@@ -30,7 +30,10 @@ type PoolStats struct {
 // HealthCheck performs a health check on the database connection
 func (p *Pool) HealthCheck(ctx context.Context) *HealthStatus {
 	start := time.Now()
-	
+
+	// Increment health check counter
+	p.metrics.IncrementHealthChecks()
+
 	// Create a context with timeout for the health check
 	healthCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
@@ -41,9 +44,11 @@ func (p *Pool) HealthCheck(ctx context.Context) *HealthStatus {
 
 	// Perform ping test
 	if err := p.Pool.Ping(healthCtx); err != nil {
+		p.metrics.IncrementFailedHealthChecks()
 		status.Healthy = false
 		status.Error = fmt.Sprintf("ping failed: %v", err)
 		status.ResponseTime = time.Since(start)
+		p.metrics.UpdateLastHealthCheck()
 		return status
 	}
 
@@ -51,18 +56,26 @@ func (p *Pool) HealthCheck(ctx context.Context) *HealthStatus {
 	var result int
 	err := p.Pool.QueryRow(healthCtx, "SELECT 1").Scan(&result)
 	if err != nil {
+		p.metrics.IncrementFailedHealthChecks()
 		status.Healthy = false
 		status.Error = fmt.Sprintf("query failed: %v", err)
 		status.ResponseTime = time.Since(start)
+		p.metrics.UpdateLastHealthCheck()
 		return status
 	}
 
 	if result != 1 {
+		p.metrics.IncrementFailedHealthChecks()
 		status.Healthy = false
 		status.Error = "unexpected query result"
 		status.ResponseTime = time.Since(start)
+		p.metrics.UpdateLastHealthCheck()
 		return status
 	}
+
+	// Update active connections and last health check time
+	p.updateActiveConnections()
+	p.metrics.UpdateLastHealthCheck()
 
 	status.Healthy = true
 	status.ResponseTime = time.Since(start)
