@@ -92,14 +92,14 @@ func setupRoutes(router *gin.Engine, dealHandler *handlers.DealHandler, systemHa
 	// Register deal endpoints
 	deals := v1.Group("/deals")
 	{
-		deals.POST("", dealHandler.CreateDeal)           // POST /api/v1/deals
-		deals.GET("", dealHandler.ListDeals)             // GET /api/v1/deals
-		deals.GET("/pipeline", dealHandler.GetPipelineView) // GET /api/v1/deals/pipeline
-		deals.GET("/owner/:id", dealHandler.GetDealsByOwner) // GET /api/v1/deals/owner/:id
-		deals.GET("/:id", dealHandler.GetDeal)           // GET /api/v1/deals/:id
-		deals.PUT("/:id", dealHandler.UpdateDeal)        // PUT /api/v1/deals/:id
-		deals.PUT("/:id/close", dealHandler.CloseDeal)   // PUT /api/v1/deals/:id/close
-		deals.DELETE("/:id", dealHandler.DeleteDeal)     // DELETE /api/v1/deals/:id
+		deals.POST("", dealHandler.CreateDeal)           		// POST /api/v1/deals
+		deals.GET("", dealHandler.ListDeals)             		// GET /api/v1/deals
+		deals.GET("/pipeline", dealHandler.GetPipelineView) 	// GET /api/v1/deals/pipeline
+		deals.GET("/owner/:id", dealHandler.GetDealsByOwner) 	// GET /api/v1/deals/owner/:id
+		deals.GET("/:id", dealHandler.GetDeal)           		// GET /api/v1/deals/:id
+		deals.PUT("/:id", dealHandler.UpdateDeal)        		// PUT /api/v1/deals/:id
+		deals.PUT("/:id/close", dealHandler.CloseDeal)   		// PUT /api/v1/deals/:id/close
+		deals.DELETE("/:id", dealHandler.DeleteDeal)     		// DELETE /api/v1/deals/:id
 	}
 	
 	log.Println("Routes registered successfully")
