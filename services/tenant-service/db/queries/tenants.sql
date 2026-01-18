@@ -1,6 +1,6 @@
 -- name: CreateTenant :one
-INSERT INTO tenants (name, subdomain, schema_name)
-VALUES ($1, $2, $3)
+INSERT INTO tenants (id, name, subdomain, schema_name)
+VALUES ($1, $2, $3, $4)
 RETURNING id, name, subdomain, schema_name, created_at;
 
 -- name: GetTenantBySubdomain :one

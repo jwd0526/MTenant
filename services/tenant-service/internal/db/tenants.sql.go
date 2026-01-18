@@ -50,19 +50,20 @@ func (q *Queries) CountTenants(ctx context.Context) (int64, error) {
 }
 
 const createTenant = `-- name: CreateTenant :one
-INSERT INTO tenants (name, subdomain, schema_name)
-VALUES ($1, $2, $3)
+INSERT INTO tenants (id, name, subdomain, schema_name)
+VALUES ($1, $2, $3, $4)
 RETURNING id, name, subdomain, schema_name, created_at
 `
 
 type CreateTenantParams struct {
+	ID         string `json:"id"`
 	Name       string `json:"name"`
 	Subdomain  string `json:"subdomain"`
 	SchemaName string `json:"schema_name"`
 }
 
 type CreateTenantRow struct {
-	ID         int32     `json:"id"`
+	ID         string    `json:"id"`
 	Name       string    `json:"name"`
 	Subdomain  string    `json:"subdomain"`
 	SchemaName string    `json:"schema_name"`
@@ -70,7 +71,12 @@ type CreateTenantRow struct {
 }
 
 func (q *Queries) CreateTenant(ctx context.Context, arg CreateTenantParams) (CreateTenantRow, error) {
-	row := q.db.QueryRow(ctx, createTenant, arg.Name, arg.Subdomain, arg.SchemaName)
+	row := q.db.QueryRow(ctx, createTenant,
+		arg.ID,
+		arg.Name,
+		arg.Subdomain,
+		arg.SchemaName,
+	)
 	var i CreateTenantRow
 	err := row.Scan(
 		&i.ID,
@@ -90,7 +96,7 @@ LIMIT $1
 `
 
 type GetRecentTenantsRow struct {
-	ID         int32     `json:"id"`
+	ID         string    `json:"id"`
 	Name       string    `json:"name"`
 	Subdomain  string    `json:"subdomain"`
 	SchemaName string    `json:"schema_name"`
@@ -140,7 +146,7 @@ FROM tenants
 WHERE id = $1
 `
 
-func (q *Queries) GetTenantByID(ctx context.Context, id int32) (Tenant, error) {
+func (q *Queries) GetTenantByID(ctx context.Context, id string) (Tenant, error) {
 	row := q.db.QueryRow(ctx, getTenantByID, id)
 	var i Tenant
 	err := row.Scan(
@@ -201,7 +207,7 @@ ORDER BY name
 `
 
 type ListAllTenantsRow struct {
-	ID         int32     `json:"id"`
+	ID         string    `json:"id"`
 	Name       string    `json:"name"`
 	Subdomain  string    `json:"subdomain"`
 	SchemaName string    `json:"schema_name"`
@@ -241,7 +247,7 @@ WHERE id = $1
 `
 
 type UpdateTenantNameParams struct {
-	ID   int32  `json:"id"`
+	ID   string `json:"id"`
 	Name string `json:"name"`
 }
 

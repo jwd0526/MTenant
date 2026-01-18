@@ -11,8 +11,8 @@ import (
 )
 
 type Invitation struct {
-	ID         int32           `json:"id"`
-	TenantID   *int32          `json:"tenant_id"`
+	ID         string          `json:"id"`
+	TenantID   *string         `json:"tenant_id"`
 	Email      string          `json:"email"`
 	Role       string          `json:"role"`
 	Token      string          `json:"token"`
@@ -24,7 +24,7 @@ type Invitation struct {
 }
 
 type Tenant struct {
-	ID         int32     `json:"id"`
+	ID         string    `json:"id"`
 	Name       string    `json:"name"`
 	Subdomain  string    `json:"subdomain"`
 	SchemaName string    `json:"schema_name"`

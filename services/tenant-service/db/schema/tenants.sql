@@ -1,6 +1,6 @@
 -- Core tenant registry table
 CREATE TABLE tenants (
-    id SERIAL PRIMARY KEY,
+    id TEXT PRIMARY KEY, -- ULID format (26 chars)
     name VARCHAR(255) NOT NULL,
     subdomain VARCHAR(63) UNIQUE NOT NULL,
     schema_name VARCHAR(63) UNIQUE NOT NULL,
@@ -10,8 +10,8 @@ CREATE TABLE tenants (
 
 -- User invitations (global table for cross-tenant invites)
 CREATE TABLE invitations (
-    id SERIAL PRIMARY KEY,
-    tenant_id INTEGER REFERENCES tenants(id) ON DELETE CASCADE,
+    id TEXT PRIMARY KEY, -- ULID format (26 chars)
+    tenant_id TEXT REFERENCES tenants(id) ON DELETE CASCADE,
     email VARCHAR(254) NOT NULL,
     role VARCHAR(20) CHECK (role IN ('admin', 'manager', 'sales_rep', 'viewer')) NOT NULL,
     token VARCHAR(255) UNIQUE NOT NULL,

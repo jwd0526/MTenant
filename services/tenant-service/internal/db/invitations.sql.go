@@ -34,8 +34,8 @@ SELECT EXISTS(
 `
 
 type CheckPendingInvitationParams struct {
-	TenantID *int32 `json:"tenant_id"`
-	Email    string `json:"email"`
+	TenantID *string `json:"tenant_id"`
+	Email    string  `json:"email"`
 }
 
 func (q *Queries) CheckPendingInvitation(ctx context.Context, arg CheckPendingInvitationParams) (bool, error) {
@@ -62,7 +62,7 @@ RETURNING id, token, expires_at, created_at
 `
 
 type CreateInvitationParams struct {
-	TenantID  *int32          `json:"tenant_id"`
+	TenantID  *string         `json:"tenant_id"`
 	Email     string          `json:"email"`
 	Role      string          `json:"role"`
 	Token     string          `json:"token"`
@@ -72,7 +72,7 @@ type CreateInvitationParams struct {
 }
 
 type CreateInvitationRow struct {
-	ID        int32     `json:"id"`
+	ID        string    `json:"id"`
 	Token     string    `json:"token"`
 	ExpiresAt time.Time `json:"expires_at"`
 	CreatedAt time.Time `json:"created_at"`
@@ -109,8 +109,8 @@ WHERE i.token = $1
 `
 
 type GetInvitationByTokenRow struct {
-	ID              int32           `json:"id"`
-	TenantID        *int32          `json:"tenant_id"`
+	ID              string          `json:"id"`
+	TenantID        *string         `json:"tenant_id"`
 	Email           string          `json:"email"`
 	Role            string          `json:"role"`
 	Token           string          `json:"token"`
@@ -151,8 +151,8 @@ ORDER BY i.created_at DESC
 `
 
 type GetInvitationsByEmailRow struct {
-	ID              int32        `json:"id"`
-	TenantID        *int32       `json:"tenant_id"`
+	ID              string       `json:"id"`
+	TenantID        *string      `json:"tenant_id"`
 	Role            string       `json:"role"`
 	Token           string       `json:"token"`
 	ExpiresAt       time.Time    `json:"expires_at"`
@@ -201,7 +201,7 @@ ORDER BY i.created_at DESC
 `
 
 type ListPendingInvitationsRow struct {
-	ID              int32     `json:"id"`
+	ID              string    `json:"id"`
 	Email           string    `json:"email"`
 	Role            string    `json:"role"`
 	ExpiresAt       time.Time `json:"expires_at"`
@@ -246,7 +246,7 @@ ORDER BY created_at DESC
 `
 
 type ListTenantInvitationsRow struct {
-	ID         int32        `json:"id"`
+	ID         string       `json:"id"`
 	Email      string       `json:"email"`
 	Role       string       `json:"role"`
 	Token      string       `json:"token"`
@@ -255,7 +255,7 @@ type ListTenantInvitationsRow struct {
 	CreatedAt  time.Time    `json:"created_at"`
 }
 
-func (q *Queries) ListTenantInvitations(ctx context.Context, tenantID *int32) ([]ListTenantInvitationsRow, error) {
+func (q *Queries) ListTenantInvitations(ctx context.Context, tenantID *string) ([]ListTenantInvitationsRow, error) {
 	rows, err := q.db.Query(ctx, listTenantInvitations, tenantID)
 	if err != nil {
 		return nil, err
@@ -289,8 +289,8 @@ WHERE id = $1 AND tenant_id = $2 AND accepted_at IS NULL
 `
 
 type RevokeInvitationParams struct {
-	ID       int32  `json:"id"`
-	TenantID *int32 `json:"tenant_id"`
+	ID       string  `json:"id"`
+	TenantID *string `json:"tenant_id"`
 }
 
 func (q *Queries) RevokeInvitation(ctx context.Context, arg RevokeInvitationParams) error {

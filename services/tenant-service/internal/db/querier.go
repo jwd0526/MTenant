@@ -21,12 +21,12 @@ type Querier interface {
 	GetInvitationsByEmail(ctx context.Context, email string) ([]GetInvitationsByEmailRow, error)
 	GetRecentTenants(ctx context.Context, limit int32) ([]GetRecentTenantsRow, error)
 	GetSchemaNameBySubdomain(ctx context.Context, subdomain string) (string, error)
-	GetTenantByID(ctx context.Context, id int32) (Tenant, error)
+	GetTenantByID(ctx context.Context, id string) (Tenant, error)
 	GetTenantBySchemaName(ctx context.Context, schemaName string) (Tenant, error)
 	GetTenantBySubdomain(ctx context.Context, subdomain string) (Tenant, error)
 	ListAllTenants(ctx context.Context) ([]ListAllTenantsRow, error)
 	ListPendingInvitations(ctx context.Context) ([]ListPendingInvitationsRow, error)
-	ListTenantInvitations(ctx context.Context, tenantID *int32) ([]ListTenantInvitationsRow, error)
+	ListTenantInvitations(ctx context.Context, tenantID *string) ([]ListTenantInvitationsRow, error)
 	RevokeInvitation(ctx context.Context, arg RevokeInvitationParams) error
 	UpdateTenantName(ctx context.Context, arg UpdateTenantNameParams) error
 }
