@@ -43,7 +43,7 @@ func (p *Pool) HealthCheck(ctx context.Context) *HealthStatus {
 	}
 
 	// Perform ping test
-	if err := p.Pool.Ping(healthCtx); err != nil {
+	if err := p.Ping(healthCtx); err != nil {
 		p.metrics.IncrementFailedHealthChecks()
 		status.Healthy = false
 		status.Error = fmt.Sprintf("ping failed: %v", err)
@@ -53,6 +53,7 @@ func (p *Pool) HealthCheck(ctx context.Context) *HealthStatus {
 	}
 
 	// Perform simple query test
+	// Note: Using Pool.QueryRow to bypass the metrics-tracking wrapper
 	var result int
 	err := p.Pool.QueryRow(healthCtx, "SELECT 1").Scan(&result)
 	if err != nil {
@@ -84,7 +85,7 @@ func (p *Pool) HealthCheck(ctx context.Context) *HealthStatus {
 
 // getPoolStats converts pgxpool.Stat to our PoolStats structure
 func (p *Pool) getPoolStats() *PoolStats {
-	stats := p.Pool.Stat()
+	stats := p.Stat()
 	return &PoolStats{
 		AcquireCount:         stats.AcquireCount(),
 		AcquireDuration:      stats.AcquireDuration().Nanoseconds(),

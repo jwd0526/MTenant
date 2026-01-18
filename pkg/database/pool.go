@@ -98,7 +98,7 @@ func (p *Pool) Close() {
 
 // Stats returns connection pool statistics
 func (p *Pool) Stats() *pgxpool.Stat {
-	return p.Pool.Stat()
+	return p.Stat()
 }
 
 // GetMetrics returns a copy of the current metrics
@@ -108,7 +108,7 @@ func (p *Pool) GetMetrics() Metrics {
 
 // updateActiveConnections updates the active connections metric from pool stats
 func (p *Pool) updateActiveConnections() {
-	stats := p.Pool.Stat()
+	stats := p.Stat()
 	p.metrics.SetActiveConnections(int64(stats.AcquiredConns()))
 }
 
