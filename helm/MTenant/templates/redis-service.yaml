@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- range $key, $val := .Values.redis.labels.service }}
+    {{ $key }}: {{ $val }}
+    {{- end }}
+spec:
+  type: ClusterIP
+  ports:
+  - port: 6379
+  selector:
+    app: redis

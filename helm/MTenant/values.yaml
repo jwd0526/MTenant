@@ -1,0 +1,37 @@
+namespace: mtenant
+
+postgres:
+  enabled: true
+  labels:
+    deployment:
+    pvc:
+    secret:
+    service:
+  image: postgres
+  tag: 15
+  credentials:
+    username:
+    password:
+    database:
+  storage:
+    size:
+    storageClass:
+
+nats:
+  enabled: true
+  labels:
+    deployment:
+    service:
+  image: nats
+  tag: latest
+
+redis:
+  enabled: true
+  labels:
+    deployment:
+    service:
+  image: redis
+  tag: 7.0-alpine
+  config:
+    maxMemoryPolicy:
+    maxMemory:

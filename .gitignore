@@ -10,3 +10,5 @@
 .DS_Store
 **/.DS_Store
 progress
+
+/helm/MTenant/local-values.yaml

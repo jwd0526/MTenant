@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nats-service
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- range $key, $val := .Values.nats.labels.service }}
+    {{ $key }}: {{ $val }}
+    {{- end }}
+spec:
+  type: ClusterIP
+  ports:
+  - port: 4222
+  - port: 8222
+  selector:
+    app: nats

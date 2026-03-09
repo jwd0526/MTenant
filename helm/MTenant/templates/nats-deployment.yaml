@@ -1,0 +1,27 @@
+{{- if .Values.nats.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nats-deployment
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- range $key, $val := .Values.nats.labels.deployment }}
+    {{ $key }}: {{ $val }}
+    {{- end }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nats
+  template:
+    metadata:
+      labels:
+        app: nats
+    spec:
+      containers:
+      - name: nats
+        image: {{ .Values.nats.image }}:{{ .Values.nats.tag }}
+        ports:
+          - containerPort: 4222
+          - containerPort: 8222
+{{- end }}
