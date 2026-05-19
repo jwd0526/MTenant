@@ -1,12 +1,10 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: mtenant-pvc 
+  name: mtenant-pvc
   namespace: {{ .Values.namespace }}
   labels:
-    {{- range $key, $val := .Values.postgres.labels.pvc }}
-    {{ $key }}: {{ $val }}
-    {{- end }}
+    {{- include "mtenant.labels.postgres" . | nindent 4 }}
 spec:
   storageClassName: {{ .Values.postgres.storage.storageClass }}
   accessModes:

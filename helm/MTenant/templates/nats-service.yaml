@@ -4,13 +4,13 @@ metadata:
   name: nats-service
   namespace: {{ .Values.namespace }}
   labels:
-    {{- range $key, $val := .Values.nats.labels.service }}
-    {{ $key }}: {{ $val }}
-    {{- end }}
+    {{- include "mtenant.labels.nats" . | nindent 4 }}
 spec:
   type: ClusterIP
   ports:
-  - port: 4222
-  - port: 8222
+  - name: client
+    port: 4222
+  - name: monitoring
+    port: 8222
   selector:
     app: nats

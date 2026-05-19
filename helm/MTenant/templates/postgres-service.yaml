@@ -4,9 +4,7 @@ metadata:
   name: postgres-service
   namespace: {{ .Values.namespace }}
   labels:
-    {{- range $key, $val := .Values.postgres.labels.service }}
-    {{ $key }}: {{ $val }}
-    {{- end }}
+    {{- include "mtenant.labels.postgres" . | nindent 4 }}
 spec:
   type: ClusterIP
   ports:

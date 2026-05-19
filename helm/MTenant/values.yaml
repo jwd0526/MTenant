@@ -1,4 +1,30 @@
 namespace: mtenant
+registry: localhost:5000
+
+authService:
+  enabled: true
+  replicas: 1
+  tag: latest
+
+tenantService:
+  enabled: true
+  replicas: 1
+  tag: latest
+
+contactService:
+  enabled: true
+  replicas: 1
+  tag: latest
+
+dealService:
+  enabled: true
+  replicas: 1
+  tag: latest
+
+communicationService:
+  enabled: true
+  replicas: 1
+  tag: latest
 
 postgres:
   enabled: true

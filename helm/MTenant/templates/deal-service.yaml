@@ -1,0 +1,3 @@
+{{ include "mtenant.service.deployment" (dict "root" . "key" "dealService" "name" "deal-service" "port" 8083) }}
+---
+{{ include "mtenant.service.service" (dict "root" . "key" "dealService" "name" "deal-service" "port" 8083) }}

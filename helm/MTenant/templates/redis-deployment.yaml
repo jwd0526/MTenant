@@ -1,13 +1,11 @@
-{{- if .Values.redis.enabled -}}
+{{- if .Values.redis.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: redis-deployment
   namespace: {{ .Values.namespace }}
   labels:
-    {{- range $key, $val := .Values.redis.labels.deployment }}
-    {{ $key }}: {{ $val }}
-    {{- end }}
+    {{- include "mtenant.labels.redis" . | nindent 4 }}
 spec:
   replicas: 1
   selector:

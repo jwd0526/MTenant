@@ -1,13 +1,11 @@
-{{- if .Values.postgres.enabled -}}
+{{- if .Values.postgres.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: postgres-deployment
   namespace: {{ .Values.namespace }}
   labels:
-    {{- range $key, $val := .Values.postgres.labels.deployment }}
-    {{ $key }}: {{ $val }}
-    {{- end }}
+    {{- include "mtenant.labels.postgres" . | nindent 4 }}
 spec:
   replicas: 1
   selector:
